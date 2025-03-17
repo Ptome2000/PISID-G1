@@ -14,18 +14,24 @@ log_dir = "logs"
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
-# Generate a log filename based on the current date and time (e.g., "logs/2025-03-17_14-45.txt")
+# Generate a log filename based on the current date and time (e.g., "logs/2025-03-17_14-55.txt")
 log_filename = f"{log_dir}/{datetime.now().strftime('%Y-%m-%d_%H-%M')}.txt"
 
 # Ensure the log file is created at the start of execution
 with open(log_filename, "w") as log_file:
     log_file.write(f"Log file created at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
 
-def log_error(error_message):
-    """Logs errors to a text file with a timestamp"""
+def log_error(error_message, payload=None):
+    """Logs errors to a text file with a timestamp and the full payload being processed"""
     with open(log_filename, "a") as log_file:
         timestamp = datetime.now().strftime("[%H:%M:%S]")  # Get current time
-        log_file.write(f"{timestamp} {error_message}\n")  # Write the error message
+        log_entry = f"{timestamp} {error_message}"
+        
+        # If payload exists, include it in the log
+        if payload is not None:
+            log_entry += f" | Payload: {json.dumps(payload, indent=2)}"
+
+        log_file.write(log_entry + "\n")  # Write to log file
 
 def insertData(collectionName, message):
     """Processes and inserts MQTT message data into MongoDB"""
@@ -55,7 +61,7 @@ def insertData(collectionName, message):
                 # Handle conversion errors (e.g., if "abc" is provided instead of a number)
                 error_msg = f"Error converting '{value}': {e}"
                 print(error_msg)
-                log_error(error_msg)  # Log the error
+                log_error(error_msg, payload)  # Log the error with the current payload
                 continue  # Skip this field and move to the next one
 
             payload[key] = value  # Add to the dictionary
@@ -68,13 +74,13 @@ def insertData(collectionName, message):
             # Handle database errors (e.g., duplicate key, connection issues)
             error_msg = f"Error inserting into MongoDB: {e}"
             print(error_msg)
-            log_error(error_msg)  # Log the error
+            log_error(error_msg, payload)  # Log the error with the full payload
 
     except Exception as e:
         # Handle any unexpected errors in the function
         error_msg = f"Error processing MQTT message: {e}"
         print(error_msg)
-        log_error(error_msg)  # Log the error
+        log_error(error_msg, None)  # Log the error (no payload available)
 
 # MQTT callback function: triggered when connected to the broker
 def on_connect(client, userdata, flags, reason_code, properties):
