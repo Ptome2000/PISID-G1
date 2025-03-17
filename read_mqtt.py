@@ -37,6 +37,8 @@ def insertData(collectionName, message):
 
             payload[key] = value  # Add to dictionary
 
+        payload["isRead"] = False
+
         try:
             res = collection.insert_one(payload)
             print("Inserted: " + str(res))
