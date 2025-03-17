@@ -10,30 +10,41 @@ def insertData(collectionName, message):
     db = client["labirinto_pisid"]
     collection = db[collectionName]
 
-    # Step 1: Decode bytes to string
-    decoded_message = message.decode("utf-8").strip("{}")  # Remove surrounding {}
+    try:
+        # Step 1: Decode bytes to string
+        decoded_message = message.decode("utf-8").strip("{}")  # Remove surrounding {}
 
-    # Step 2: Iterate and construct a dictionary
-    payload = {}
-    for field in decoded_message.split(", "):  # Split key-value pairs
-        key, value = field.split(":", 1)  # Split key and value
-        key = key.strip()  # Remove spaces
+        # Step 2: Iterate and construct a dictionary
+        payload = {}
+        for field in decoded_message.split(", "):  # Split key-value pairs
+            key, value = field.split(":", 1)  # Split key and value
+            key = key.strip()  # Remove spaces
 
-        # Check if the value is a string (has quotes)
-        value = value.strip()
-        if value.startswith('"') and value.endswith('"'):
-            value = value.strip('"')  # Remove quotes
-        # Check if the value is a number (int or float)
-        elif "." in value:
-            value = float(value)  # Convert to float
-        else:
-            value = int(value)  # Convert to int
+            # Check if the value is a string (has quotes)
+            value = value.strip()
 
-        payload[key] = value  # Add to dictionary
+            try:
+                if value.startswith('"') and value.endswith('"'):
+                    value = value.strip('"')  # Remove quotes
+                # Check if the value is a number (int or float)
+                elif "." in value:
+                    value = float(value)  # Convert to float
+                else:
+                    value = int(value)  # Convert to int
+            except ValueError as e:
+                print(f"error while converting '{value}': {e}")
+                continue
 
-    res = collection.insert_one(payload)
-    print("Inserted: " + str(res))
+            payload[key] = value  # Add to dictionary
 
+        try:
+            res = collection.insert_one(payload)
+            print("Inserted: " + str(res))
+        except pymongo.errors.PyMongoError as e:
+            print(f"error while inserting: {e}")
+
+    except Exception as e:
+        print(f"error while porocessing MQTT message: {e}")
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, reason_code, properties):
