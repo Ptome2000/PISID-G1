@@ -17,6 +17,10 @@ if not os.path.exists(log_dir):
 # Generate a log filename based on the current date and time (e.g., "logs/2025-03-17_14-45.txt")
 log_filename = f"{log_dir}/{datetime.now().strftime('%Y-%m-%d_%H-%M')}.txt"
 
+# Ensure the log file is created at the start of execution
+with open(log_filename, "w") as log_file:
+    log_file.write(f"Log file created at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
 def log_error(error_message):
     """Logs errors to a text file with a timestamp"""
     with open(log_filename, "a") as log_file:
@@ -75,7 +79,7 @@ def insertData(collectionName, message):
 # MQTT callback function: triggered when connected to the broker
 def on_connect(client, userdata, flags, reason_code, properties):
     print(f"Connected with result code {reason_code}")
-
+    
     # Subscribe to MQTT topics when connected
     client.subscribe("pisid_mazesound_1")
     client.subscribe("pisid_mazemov_1")
@@ -83,7 +87,7 @@ def on_connect(client, userdata, flags, reason_code, properties):
 # MQTT callback function: triggered when a message is received
 def on_message(client, userdata, msg):
     print(msg.topic + " " + str(msg.payload))  # Print received message
-
+    
     # Process the message and insert it into the correct MongoDB collection
     if msg.topic == "pisid_mazemov_1":
         insertData("movimento", msg.payload)
