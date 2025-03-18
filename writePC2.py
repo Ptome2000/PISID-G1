@@ -34,6 +34,10 @@ def connect_mySQL():
         )
         cursor = connection.cursor()
 
+        # When a user starts the game a new row is inserted into the game table (mock)
+        #cursor.execute("INSERT INTO game (PlayerID, GameOver, ConfigID, UserID) VALUES ('1', '1', '1', '1')")
+        #connection.commit()
+
         # Test connection (PASSING)
         print(f"Connection to SQL established with cursor: {cursor}")
         cursor.execute("SELECT * FROM game WHERE PlayerID = 1 AND GameOver = 1")
@@ -47,7 +51,7 @@ def connect_mySQL():
 
         return connection, cursor
     except mysql.connector.Error as err:
-        print(f"Error while connection to SQL: {err}")
+        print(f"Error while connecting to SQL: {err}")
 
 # Função para armazenar os dados recebidos do MQTT na BD local do MySQL (PC2)
 def store_mySQL(connection, cursor, topic, payload):

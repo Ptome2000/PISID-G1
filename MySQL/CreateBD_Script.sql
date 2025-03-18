@@ -110,7 +110,6 @@ ENGINE = InnoDB;
 -- Table `marsami_game`.`Movement`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `marsami_game`.`Movement` (
-  `MoveTime` DATETIME NOT NULL,
   `OriginRoom` INT NOT NULL,
   `DestinationRoom` INT NOT NULL,
   `Status` ENUM('0', '1', '2') NOT NULL,
