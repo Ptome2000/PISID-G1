@@ -15,30 +15,22 @@ CREATE SCHEMA IF NOT EXISTS `marsami_game` DEFAULT CHARACTER SET utf8 ;
 USE `marsami_game` ;
 
 -- -----------------------------------------------------
--- Table `marsami_game`.`Configuration`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `marsami_game`.`Configuration` (
-  `ConfigID` INT NOT NULL AUTO_INCREMENT,
-  `TotalMarsamis` INT NOT NULL,
-  `SoundLimit` DOUBLE NOT NULL,
-  `MarsamisTTL` INT NOT NULL,
-  PRIMARY KEY (`ConfigID`))
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
 -- Table `marsami_game`.`User`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `marsami_game`.`User` (
-  `UserID` INT NOT NULL,
-  `Name` VARCHAR(45) NULL,
-  `Cellphone` DECIMAL(9) NULL,
-  `Type` ENUM('Admin', 'Player') NOT NULL,
-  `Email` VARCHAR(45) NOT NULL,
+  `IDUser` INT NOT NULL AUTO_INCREMENT,
+  `Nome` VARCHAR(100) NULL,
+  `Telemovel` DECIMAL(12) NULL,
+  `Tipo` VARCHAR(3) NOT NULL,
+  `Email` VARCHAR(50) NOT NULL,
   `Password` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`UserID`),
-  UNIQUE INDEX `Cellphone_UNIQUE` (`Cellphone` ASC),
-  UNIQUE INDEX `Email_UNIQUE` (`Email` ASC))
+  `Grupo` INT NULL,
+  `Username` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`IDUser`),
+  UNIQUE INDEX `Cellphone_UNIQUE` (`Telemovel` ASC),
+  UNIQUE INDEX `Email_UNIQUE` (`Email` ASC),
+  UNIQUE INDEX `UserID_UNIQUE` (`IDUser` ASC),
+  UNIQUE INDEX `Username_UNIQUE` (`Username` ASC))
 ENGINE = InnoDB;
 
 
@@ -46,42 +38,21 @@ ENGINE = InnoDB;
 -- Table `marsami_game`.`Game`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `marsami_game`.`Game` (
-  `GameID` INT NOT NULL AUTO_INCREMENT,
-  `PlayerID` INT NOT NULL,
+  `IDJogo` INT NOT NULL AUTO_INCREMENT,
   `StartDate` DATETIME NOT NULL,
   `GameOver` TINYINT NOT NULL,
-  `ConfigID` INT NOT NULL,
   `UserID` INT NOT NULL,
-  PRIMARY KEY (`GameID`),
+  `Description` VARCHAR(200) NULL,
+  `GameName` VARCHAR(50) NULL,
+  `TotalMarsamis` INT NOT NULL,
+  `SoundVarTolerance` DOUBLE NOT NULL,
+  `BaseSound` DOUBLE NOT NULL,
+  PRIMARY KEY (`IDJogo`),
   UNIQUE INDEX `StartDate_UNIQUE` (`StartDate` ASC),
-  INDEX `fk_Game_Configuration1_idx` (`ConfigID` ASC),
   INDEX `fk_Game_User1_idx` (`UserID` ASC),
-  CONSTRAINT `fk_Game_Configuration1`
-    FOREIGN KEY (`ConfigID`)
-    REFERENCES `marsami_game`.`Configuration` (`ConfigID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
   CONSTRAINT `fk_Game_User1`
     FOREIGN KEY (`UserID`)
-    REFERENCES `marsami_game`.`User` (`UserID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `marsami_game`.`Message`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `marsami_game`.`Message` (
-  `MessageID` INT NOT NULL AUTO_INCREMENT,
-  `RegisteredDate` DATETIME NOT NULL,
-  `Type` ENUM('Move', 'Sound') NULL,
-  `GameID` INT NOT NULL,
-  PRIMARY KEY (`MessageID`),
-  INDEX `fk_Message_Game1_idx` (`GameID` ASC),
-  CONSTRAINT `fk_Message_Game1`
-    FOREIGN KEY (`GameID`)
-    REFERENCES `marsami_game`.`Game` (`GameID`)
+    REFERENCES `marsami_game`.`User` (`IDUser`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -91,16 +62,16 @@ ENGINE = InnoDB;
 -- Table `marsami_game`.`Marsami`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `marsami_game`.`Marsami` (
-  `MarsamiID` INT NOT NULL AUTO_INCREMENT,
+  `IDMarsami` INT NOT NULL AUTO_INCREMENT,
   `MarsamiNumber` INT NOT NULL,
   `CurrStatus` ENUM('0', '1', '2') NOT NULL,
   `CurrRoom` INT NOT NULL,
   `GameID` INT NOT NULL,
-  PRIMARY KEY (`MarsamiID`),
+  PRIMARY KEY (`IDMarsami`),
   INDEX `fk_Marsami_Game1_idx` (`GameID` ASC),
   CONSTRAINT `fk_Marsami_Game1`
     FOREIGN KEY (`GameID`)
-    REFERENCES `marsami_game`.`Game` (`GameID`)
+    REFERENCES `marsami_game`.`Game` (`IDJogo`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -110,22 +81,24 @@ ENGINE = InnoDB;
 -- Table `marsami_game`.`Movement`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `marsami_game`.`Movement` (
+  `IDMovement` INT NOT NULL AUTO_INCREMENT,
   `OriginRoom` INT NOT NULL,
   `DestinationRoom` INT NOT NULL,
   `Status` ENUM('0', '1', '2') NOT NULL,
-  `MessageID` INT NOT NULL,
+  `Hour` DATETIME NOT NULL,
   `MarsamiID` INT NOT NULL,
-  PRIMARY KEY (`MessageID`),
-  INDEX `fk_Movement_Message1_idx` (`MessageID` ASC),
+  `IDGame` INT NOT NULL,
   INDEX `fk_Movement_Marsami1_idx` (`MarsamiID` ASC),
-  CONSTRAINT `fk_Movement_Message1`
-    FOREIGN KEY (`MessageID`)
-    REFERENCES `marsami_game`.`Message` (`MessageID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+  PRIMARY KEY (`IDMovement`),
+  INDEX `fk_Movement_Game1_idx` (`IDGame` ASC),
   CONSTRAINT `fk_Movement_Marsami1`
     FOREIGN KEY (`MarsamiID`)
-    REFERENCES `marsami_game`.`Marsami` (`MarsamiID`)
+    REFERENCES `marsami_game`.`Marsami` (`IDMarsami`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Movement_Game1`
+    FOREIGN KEY (`IDGame`)
+    REFERENCES `marsami_game`.`Game` (`IDJogo`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -135,13 +108,38 @@ ENGINE = InnoDB;
 -- Table `marsami_game`.`Sound`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `marsami_game`.`Sound` (
-  `Sound` DOUBLE NOT NULL,
-  `MessageID` INT NOT NULL,
-  PRIMARY KEY (`MessageID`),
-  INDEX `fk_Sound_Message_idx` (`MessageID` ASC),
-  CONSTRAINT `fk_Sound_Message`
-    FOREIGN KEY (`MessageID`)
-    REFERENCES `marsami_game`.`Message` (`MessageID`)
+  `IDSound` INT NOT NULL AUTO_INCREMENT,
+  `Sound` VARCHAR(12) NOT NULL,
+  `Hour` DATETIME NOT NULL,
+  `IDGame` INT NOT NULL,
+  PRIMARY KEY (`IDSound`),
+  INDEX `fk_Sound_Game1_idx` (`IDGame` ASC),
+  CONSTRAINT `fk_Sound_Game1`
+    FOREIGN KEY (`IDGame`)
+    REFERENCES `marsami_game`.`Game` (`IDJogo`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `marsami_game`.`Message`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `marsami_game`.`Message` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `Hora` DATETIME NULL,
+  `Sala` INT NULL,
+  `GameID` INT NOT NULL,
+  `Sensor` INT NULL,
+  `Leitura` DECIMAL(6,2) NULL,
+  `TipoAlerta` VARCHAR(50) NULL,
+  `Msg` VARCHAR(100) NULL,
+  `HoraEscrita` DATETIME NULL,
+  PRIMARY KEY (`ID`),
+  INDEX `fk_Message_Game1_idx` (`GameID` ASC),
+  CONSTRAINT `fk_Message_Game1`
+    FOREIGN KEY (`GameID`)
+    REFERENCES `marsami_game`.`Game` (`IDJogo`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -151,18 +149,18 @@ ENGINE = InnoDB;
 -- Table `marsami_game`.`Corridor`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `marsami_game`.`Corridor` (
-  `CorridorID` INT NOT NULL,
+  `IDCorridor` INT NOT NULL,
   `OriginRoom` INT NOT NULL,
   `DestinationRoom` INT NOT NULL,
   `Distance` INT NOT NULL,
   `isClosed` TINYINT NOT NULL,
   `GameID` INT NOT NULL,
-  PRIMARY KEY (`CorridorID`),
+  PRIMARY KEY (`IDCorridor`),
   INDEX `FKGame` (`GameID` ASC),
   UNIQUE INDEX `uniqueRoomComb` (`DestinationRoom` ASC, `OriginRoom` ASC),
   CONSTRAINT `fk_Corridor_Game1`
     FOREIGN KEY (`GameID`)
-    REFERENCES `marsami_game`.`Game` (`GameID`)
+    REFERENCES `marsami_game`.`Game` (`IDJogo`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -172,16 +170,15 @@ ENGINE = InnoDB;
 -- Table `marsami_game`.`Occupation`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `marsami_game`.`Occupation` (
-  `OccupationID` INT NOT NULL,
-  `MarsamisOdd` INT NULL,
-  `MarsamisEven` INT NULL,
-  `RoomNumber` INT NULL,
-  `GameID` INT NOT NULL,
-  PRIMARY KEY (`OccupationID`),
-  INDEX `fk_Occupation_Game1_idx` (`GameID` ASC),
+  `IDJogo` INT NOT NULL,
+  `NumeroMarsamisOdd` INT NOT NULL,
+  `NumeroMarsamisEven` INT NOT NULL,
+  `Sala` INT NOT NULL,
+  INDEX `fk_Occupation_Game1_idx` (`IDJogo` ASC),
+  PRIMARY KEY (`IDJogo`),
   CONSTRAINT `fk_Occupation_Game1`
-    FOREIGN KEY (`GameID`)
-    REFERENCES `marsami_game`.`Game` (`GameID`)
+    FOREIGN KEY (`IDJogo`)
+    REFERENCES `marsami_game`.`Game` (`IDJogo`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
