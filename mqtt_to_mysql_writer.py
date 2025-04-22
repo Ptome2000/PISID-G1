@@ -2,6 +2,8 @@
 # Importações de bibliotecas
 # ==============================
 
+import os
+from dotenv import load_dotenv
 import paho.mqtt.client as mqtt              # Biblioteca MQTT para receber mensagens dos tópicos
 import mysql.connector                       # Biblioteca para conectar ao MySQL
 import json                                  # Para decodificar payloads JSON recebidos via MQTT
@@ -11,16 +13,16 @@ from datetime import datetime                # Para validações e formatação 
 # Configurações do sistema
 # ==============================
 
-# Configurações do broker MQTT
-MQTT_BROKER = "broker.emqx.io"
-MQTT_PORT = 1883
-MQTT_TOPICS = [("pisid_g1_movimento_1", 0), ("pisid_g1_ruido_1", 0)]  # Subscrição aos tópicos
+load_dotenv() 
+current_player = int(os.getenv("CURRENT_PLAYER", 1)) # Currently active player (default: 1)
+broker_host = os.getenv("BROKER_HOST", "broker.emqx.io") # MQTT broker host (default: broker.emqx.io)
+broker_port = int(os.getenv("BROKER_PORT", 1883)) # MQTT broker port (default: 1883)
+db_host = os.getenv("DB_HOST", "localhost") # DB host (default: localhost)
+db_user = os.getenv("DB_USER", "root") # MySQL user (default: root)
+db_password = os.getenv("DB_PASSWORD", "") # MySQL password (default: empty)
+sql_db = os.getenv("SQL_DB", "marsami_game") # MySQL database (default: marsami_game)
 
-# Configurações da base de dados MySQL
-MYSQL_HOST = "localhost"
-MYSQL_DATABASE = "marsami_game"
-MYSQL_USER = "root"
-MYSQL_PASSWORD = ""
+MQTT_TOPICS = [(f"pisid_g1_movimento_{current_player}", 0), (f"pisid_g1_ruido_{current_player}", 0)]  # Subscrição aos tópicos
 
 # ==============================
 # Funções de callbacks do MQTT
@@ -38,7 +40,7 @@ def on_message(client, userdata, msg):
     Callback chamada ao receber uma mensagem de um dos tópicos MQTT.
     Encaminha a mensagem para a função de armazenamento no MySQL.
     """
-    print(f"MQTT message received: {msg.topic} -> {msg.payload.decode()}")
+    print(f"{msg.topic} {msg.payload}")
     store_to_mysql(userdata['connection'], msg.topic, msg.payload.decode())
 
 # ==============================
@@ -51,10 +53,10 @@ def connect_mysql():
     """
     try:
         connection = mysql.connector.connect(
-            host=MYSQL_HOST,
-            user=MYSQL_USER,
-            password=MYSQL_PASSWORD,
-            database=MYSQL_DATABASE
+            host=db_host,
+            user=db_user,
+            password=db_password,
+            database=sql_db
         )
         return connection
     except mysql.connector.Error as err:
@@ -134,10 +136,13 @@ def store_to_mysql(connection, topic, payload):
     """
     Encaminha a mensagem para a função de armazenamento correta com base no tópico.
     """
+
+    # TODO: Atualizar scripts de store com o MySQL mais recente
+
     try:
-        if topic == "pisid_g1_movimento_1":
+        if topic == f"pisid_g1_movimento_{current_player}":
             store_movement(connection, payload)
-        elif topic == "pisid_g1_ruido_1":
+        elif topic == f"pisid_g1_ruido_{current_player}":
             store_sound(connection, payload)
         else:
             print(f"[WARNING] Unknown topic: {topic}")
@@ -236,6 +241,7 @@ def store_sound(connection, payload):
     finally:
         cursor.close()
 
+# TODO: Substituir por SP
 def get_active_game(cursor, PlayerID):
     """
     Retorna o jogo ativo (GameOver = 1) de um jogador.
@@ -259,5 +265,5 @@ connection = connect_mysql()
 client.user_data_set({'connection': connection})
 
 # Conecta ao broker e inicia o loop para escutar mensagens
-client.connect(MQTT_BROKER, MQTT_PORT, 60)
+client.connect(broker_host, broker_port, 60)
 client.loop_forever()

@@ -4,9 +4,20 @@ from datetime import datetime
 import paho.mqtt.client as mqtt
 import pymongo
 from pymongo import MongoClient
+from dotenv import load_dotenv
+
+# ==============================
+# System Settings
+# ==============================
+
+load_dotenv() 
+broker_host = os.getenv("BROKER_HOST", "broker.emqx.io") # MQTT broker host (default: broker.emqx.io)
+broker_port = int(os.getenv("BROKER_PORT", 1883)) # MQTT broker port (default: 1883)
+db_host = os.getenv("DB_HOST", "localhost") # DB host (default: localhost)
+mongo_port = int(os.getenv("MONGO_PORT", 27017)) # MongoDB port (default: 27017)
 
 # === [1] MongoDB connection ===
-client = MongoClient("localhost", 27017)
+client = MongoClient(db_host, mongo_port)
 
 # === [2] Logging setup ===
 log_dir = "logs"
@@ -91,5 +102,5 @@ mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqttc.on_connect = on_connect
 mqttc.on_message = on_message
 
-mqttc.connect("broker.emqx.io", 1883, 60)
+mqttc.connect(broker_host, broker_port, 60)
 mqttc.loop_forever()

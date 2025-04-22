@@ -20,6 +20,9 @@ Requirements:
 <li>
 <p>Need to install mySQL with pip install mysql-connector-python </p>
 </li>
+<li>
+<p>Need to install .env with pip3 install python-dotenv </p>
+</li>
 </ul>
 
 #Notas:

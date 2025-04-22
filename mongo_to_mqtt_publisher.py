@@ -1,20 +1,30 @@
 import json
 import time
+import os
 import paho.mqtt.client as mqtt
 from pymongo import MongoClient
+from dotenv import load_dotenv
+
+# ==============================
+# System Settings
+# ==============================
+
+load_dotenv() 
+broker_host = os.getenv("BROKER_HOST", "broker.emqx.io") # MQTT broker host (default: broker.emqx.io)
+broker_port = int(os.getenv("BROKER_PORT", 1883)) # MQTT broker port (default: 1883)
+db_host = os.getenv("DB_HOST", "localhost") # DB host (default: localhost)
+mongo_port = os.getenv("MONGO_PORT", 27017) # MongoDB port (default: 27017)
 
 # ==============================
 # MongoDB Connection
 # ==============================
 
-client = MongoClient("localhost", 27017)
+client = MongoClient(db_host, mongo_port)
 db = client["labirinto_pisid"]
 
 # ==============================
-# Game State
+# Mongo Messages Settings
 # ==============================
-
-current_player = 1  # Currently active player (default: 1)
 
 # Variables to track last messages for spam filtering
 last_movimento = None
@@ -78,6 +88,8 @@ def send_data(collection_name, player):
 # MQTT Callbacks
 # ==============================
 
+## This methods are called for testing purposes with a mocked topic
+
 def on_connect(client, userdata, flags, reason_code, properties):
     print(f"Connected with result code {reason_code}")
     client.subscribe("pisid_g1_player")
@@ -98,7 +110,7 @@ def on_message(client, userdata, msg):
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqttc.on_connect = on_connect
 mqttc.on_message = on_message
-mqttc.connect("broker.emqx.io", 1883, 60)
+mqttc.connect(broker_host, broker_port, 60)
 mqttc.loop_start()
 
 # ==============================
