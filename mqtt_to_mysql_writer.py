@@ -157,8 +157,10 @@ def store_movement(connection, payload):
         data = json.loads(payload)
         PlayerID = data["Player"]
 
+        # Call the stored procedure get_active_game
         cursor = connection.cursor(dictionary=True)
-        game = get_active_game(cursor, PlayerID)
+        cursor.callproc("get_active_game", (PlayerID,))
+        game = cursor.stored_results().fetchone()
 
         if not game:
             print(f"[ERROR] No active game found for PlayerID {PlayerID}")
@@ -240,14 +242,6 @@ def store_sound(connection, payload):
         print(f"[ERROR] MySQL sound insert failed: {err}")
     finally:
         cursor.close()
-
-# TODO: Substituir por SP
-def get_active_game(cursor, PlayerID):
-    """
-    Retorna o jogo ativo (GameOver = 1) de um jogador.
-    """
-    cursor.execute("SELECT * FROM game WHERE PlayerID = %s AND GameOver = 1", (PlayerID,))
-    return cursor.fetchone()
 
 # ==============================
 # Inicialização do cliente MQTT

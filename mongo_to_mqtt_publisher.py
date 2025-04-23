@@ -12,14 +12,13 @@ from dotenv import load_dotenv
 load_dotenv() 
 broker_host = os.getenv("BROKER_HOST", "broker.emqx.io") # MQTT broker host (default: broker.emqx.io)
 broker_port = int(os.getenv("BROKER_PORT", 1883)) # MQTT broker port (default: 1883)
-db_host = os.getenv("DB_HOST", "localhost") # DB host (default: localhost)
-mongo_port = os.getenv("MONGO_PORT", 27017) # MongoDB port (default: 27017)
+replicas = os.getenv("REPLICA_SET") # Replicas
 
 # ==============================
 # MongoDB Connection
 # ==============================
 
-client = MongoClient(db_host, mongo_port)
+client = MongoClient(replicas)
 db = client["labirinto_pisid"]
 
 # ==============================
