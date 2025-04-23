@@ -1,4 +1,14 @@
 @echo off
+:: Autoelevar a execução se não estiver como administrador
+:: Este bloco relança o script com permissões elevadas via PowerShell
+
+fsutil dirty query %systemdrive% >nul 2>&1
+if errorlevel 1 (
+    echo A relancar como Administrador...
+    powershell -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+    exit /b
+)
+
 chcp 1252 >nul
 echo A encerrar todas as instâncias do MongoDB...
 
