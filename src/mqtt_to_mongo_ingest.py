@@ -19,7 +19,7 @@ replicas = os.getenv("REPLICA_SET") # Replicas
 client = MongoClient(replicas)
 
 # === [2] Logging setup ===
-log_dir = "logs"
+log_dir = "../logs"
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 

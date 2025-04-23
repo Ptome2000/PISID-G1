@@ -13,6 +13,7 @@ load_dotenv()
 broker_host = os.getenv("BROKER_HOST", "broker.emqx.io") # MQTT broker host (default: broker.emqx.io)
 broker_port = int(os.getenv("BROKER_PORT", 1883)) # MQTT broker port (default: 1883)
 replicas = os.getenv("REPLICA_SET") # Replicas
+current_player = os.getenv("CURRENT_PLAYER" ,1) # current player
 
 # ==============================
 # MongoDB Connection
