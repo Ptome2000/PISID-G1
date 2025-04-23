@@ -14,15 +14,13 @@ from datetime import datetime                # Para validações e formatação 
 # ==============================
 
 load_dotenv() 
-current_player = int(os.getenv("CURRENT_PLAYER", 1)) # Currently active player (default: 1)
+current_player = os.getenv("CURRENT_PLAYER", 1) # Currently active player (default: 1)
 broker_host = os.getenv("BROKER_HOST", "broker.emqx.io") # MQTT broker host (default: broker.emqx.io)
 broker_port = int(os.getenv("BROKER_PORT", 1883)) # MQTT broker port (default: 1883)
 db_host = os.getenv("DB_HOST", "localhost") # DB host (default: localhost)
 db_user = os.getenv("DB_USER", "root") # MySQL user (default: root)
 db_password = os.getenv("DB_PASSWORD", "") # MySQL password (default: empty)
 sql_db = os.getenv("SQL_DB", "marsami_game") # MySQL database (default: marsami_game)
-
-MQTT_TOPICS = [(f"pisid_g1_movimento_{current_player}", 0), (f"pisid_g1_ruido_{current_player}", 0)]  # Subscrição aos tópicos
 
 # ==============================
 # Funções de callbacks do MQTT
@@ -33,7 +31,8 @@ def on_connect(client, userdata, flags, reason_code, properties):
     Callback chamada ao conectar ao broker MQTT. Subcreve aos tópicos definidos.
     """
     print(f"Connected to MQTT broker with result code {reason_code}")
-    client.subscribe(MQTT_TOPICS)
+    client.subscribe(f"pisid_g1_movimento_{current_player}")
+    client.subscribe(f"pisid_g1_ruido_{current_player}")
 
 def on_message(client, userdata, msg):
     """
@@ -154,51 +153,60 @@ def store_movement(connection, payload):
     Processa e armazena dados de movimento no MySQL após validação.
     """
     try:
+        payload = payload.replace("'", '"')
         data = json.loads(payload)
         PlayerID = data["Player"]
 
         # Call the stored procedure get_active_game
         cursor = connection.cursor(dictionary=True)
-        cursor.callproc("get_active_game", (PlayerID,))
-        game = cursor.stored_results().fetchone()
 
-        if not game:
+        # TODO: Fix the calling of the stored procedure
+
+        '''
+        cursor.callproc("get_active_game", [PlayerID, 0])
+
+        # Retrieve the OUT parameter value
+        cursor.execute("SELECT @ActiveGame AS ActiveGame")
+        result = cursor.fetchone()
+        active_game_id = result["ActiveGame"] if result else None
+        '''
+        
+        cursor.execute("SELECT IDJogo FROM Game WHERE Game.UserID = 1 AND GameOver = 0")
+        active_game = cursor.fetchone()
+
+        if not active_game:
             print(f"[ERROR] No active game found for PlayerID {PlayerID}")
             return
+        
+        print(f"[DEBUG] Active game found for PlayerID {PlayerID}: {active_game}")
 
-        game_start_date = game['StartDate'] if 'StartDate' in game else datetime.now()
-
-        valid, msg = validate_data(data, "movement", game_start_date)
+        valid, msg = validate_data(data, "movement", None)  # Pass None for game_start_date if not needed
         if not valid:
             print(f"[INVALID MOVEMENT] {msg}")
             return
 
-        # Inserção na tabela message
-        cursor.execute("INSERT INTO message (Type, GameID) VALUES ('Move', %s)", (game['GameID'],))
-        message_id = cursor.lastrowid
-        connection.commit()
-
-        marsami_id = 1
-
-        # Inserção na tabela movement
+        # Insert into the movement table
         cursor.execute("""
-            INSERT INTO movement (MessageID, MarsamiID, OriginRoom, DestinationRoom, Status)
+            INSERT INTO movement (OriginRoom, DestinationRoom, Status, MarsamiNum, IDGame)
             VALUES (%s, %s, %s, %s, %s)
         """, (
-            message_id,
-            marsami_id,
             data["RoomOrigin"],
             data["RoomDestiny"],
-            data["Status"]
+            int(data["Status"]),
+            data["Marsami"],
+            active_game["IDJogo"] #Change in future
         ))
         connection.commit()
+
+        print(f"[MOVEMENT] Data stored successfully for PlayerID {PlayerID}")
 
     except json.JSONDecodeError as e:
         print(f"[ERROR] Invalid JSON payload: {e}")
     except mysql.connector.Error as err:
         print(f"[ERROR] MySQL movement insert failed: {err}")
     finally:
-        cursor.close()
+        if cursor:
+            cursor.close()
 
 def store_sound(connection, payload):
     """
@@ -217,6 +225,7 @@ def store_sound(connection, payload):
             print(f"[ERROR] No active game found for PlayerID {PlayerID}")
             return
 
+        # TODO: Criar SP ou fazer select direto da tabela
         game_start_date = game['StartDate'] if 'StartDate' in game else datetime.now()
 
         valid, msg = validate_data(data, "sound", game_start_date)
