@@ -46,9 +46,10 @@ def is_spam(collection_name, current_doc):
         return False
 
     elif collection_name == "ruido":
+        # TODO: alterar para comparar apenas o som, em vez do documento todo.
         if last_ruido == current_doc:
             ruido_repeats += 1
-            if ruido_repeats > 3:
+            if ruido_repeats > 1:
                 return True  # Allow up to 3 repeated noise events
         else:
             last_ruido = current_doc
@@ -60,10 +61,9 @@ def is_spam(collection_name, current_doc):
 def send_data(collection_name, player):
     """Send unread documents from MongoDB to MQTT, applying spam filtering."""
     collection = db[collection_name]
-
     query = {
         "$and": [
-            {"Player": player},
+            {"Player": int(player)},
             {"$or": [{"isRead": False}, {"isRead": {"$exists": False}}]}
         ]
     }
@@ -92,16 +92,11 @@ def send_data(collection_name, player):
 
 def on_connect(client, userdata, flags, reason_code, properties):
     print(f"Connected with result code {reason_code}")
-    client.subscribe("pisid_g1_player")
-
-def on_message(client, userdata, msg):
-    global current_player
-    print(f"{msg.topic} {msg.payload}")
-
-    if msg.topic == "pisid_g1_player":
-        data = json.loads(msg.payload)
-        current_player = data["player"]
-        print(f"Player set: {current_player}")
+    while True:
+        send_data("movimento", current_player)
+        send_data("ruido", current_player)
+        time.sleep(0.5)
+    # client.subscribe("pisid_g1_player")
 
 # ==============================
 # MQTT Setup
@@ -109,16 +104,5 @@ def on_message(client, userdata, msg):
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqttc.on_connect = on_connect
-mqttc.on_message = on_message
 mqttc.connect(broker_host, broker_port, 60)
-mqttc.loop_start()
-
-# ==============================
-# Main Loop
-# ==============================
-
-while True:
-    if current_player:
-        send_data("movimento", current_player)
-        send_data("ruido", current_player)
-    time.sleep(0.5)
+mqttc.loop_forever()
