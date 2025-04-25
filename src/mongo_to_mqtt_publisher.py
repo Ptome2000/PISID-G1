@@ -79,7 +79,7 @@ def send_data(collection_name, player):
             print(f"[SPAM] from '{collection_name}': {doc}")
         else:
             print(f"Sending to {topic}: {doc}")
-            mqttc.publish(topic, json.dumps(doc), qos=2)
+            mqttc.publish(topic, json.dumps(doc).encode("utf-8"), qos=2)
 
         # Mark the document as read in MongoDB
         collection.update_one({"_id": mongo_id}, {"$set": {"isRead": True}})
@@ -89,13 +89,17 @@ def send_data(collection_name, player):
 # ==============================
 
 ## This methods are called for testing purposes with a mocked topic
+import threading
 
-def on_connect(client, userdata, flags, reason_code, properties):
-    print(f"Connected with result code {reason_code}")
+def start_sending_loop():
     while True:
         send_data("movimento", current_player)
         send_data("ruido", current_player)
         time.sleep(0.5)
+
+def on_connect(client, userdata, flags, reason_code, properties):
+    print(f"Connected with result code {reason_code}")
+    threading.Thread(target=start_sending_loop).start()
     # client.subscribe("pisid_g1_player")
 
 # ==============================

@@ -32,7 +32,7 @@ def on_connect(client, userdata, flags, reason_code, properties):
     """
     print(f"Connected to MQTT broker with result code {reason_code}")
     client.subscribe(f"pisid_g1_movimento_{current_player}")
-    client.subscribe(f"pisid_g1_ruido_{current_player}")
+    #client.subscribe(f"pisid_g1_ruido_{current_player}")
 
 def on_message(client, userdata, msg):
     """
