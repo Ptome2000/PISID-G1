@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS `marsami_game`.`Movement` (
                                                          `OriginRoom` INT NOT NULL,
                                                          `DestinationRoom` INT NOT NULL,
                                                          `Status` ENUM('0', '1', '2') NOT NULL,
-                                                         `Hour` DATETIME NOT NULL,
+                                                         `Hour` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                          `MarsamiNum` INT NOT NULL,
                                                          `IDGame` INT NOT NULL,
                                                          PRIMARY KEY (`IDMovement`),
@@ -131,7 +131,7 @@ DROP TABLE IF EXISTS `marsami_game`.`Message` ;
 
 CREATE TABLE IF NOT EXISTS `marsami_game`.`Message` (
                                                         `ID` INT NOT NULL AUTO_INCREMENT,
-                                                        `Hora` DATETIME NULL,
+                                                        `Hora` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
                                                         `Sala` INT NULL,
                                                         `GameID` INT NOT NULL,
                                                         `Sensor` INT NULL,

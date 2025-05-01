@@ -1,6 +1,6 @@
 create definer = root@localhost trigger Update_Occupation_I
     after insert
-    on marsami
+    on Marsami
     for each row
 begin
     -- Declare variables for even and odd counts

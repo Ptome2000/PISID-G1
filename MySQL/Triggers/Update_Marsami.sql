@@ -1,6 +1,6 @@
 create definer = root@localhost trigger Update_Marsami
     after insert
-    on movement
+    on Movement
     for each row
 begin
     -- Atualiza os campos CurrStatus e CurrRoom na tabela Marsami

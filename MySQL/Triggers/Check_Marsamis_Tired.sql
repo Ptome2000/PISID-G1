@@ -1,6 +1,6 @@
 create definer = root@localhost trigger Check_Marsamis_Tired
     after update
-                     on marsami
+                     on Marsami
                      for each row
 begin
     -- Declare variables for total Marsamis with CurrStatus = 2 and the game's TotalMarsamis

@@ -65,13 +65,13 @@ def connect_mysql():
 # Validação dos dados recebidos
 # ==============================
 
-def validate_data(data, tipo, game_start_date, previous_value=None):
+def validate_data(data, tipo, game, previous_value=None):
     """
     Valida dados recebidos de mensagens MQTT antes de serem inseridos no MySQL.
 
     :param data: Dicionário com os dados da mensagem
     :param tipo: Tipo da mensagem: 'movement' ou 'sound'
-    :param game_start_date: Data de início do jogo
+    :param game: Dicionário com informações do jogo ativo
     :param previous_value: Valor anterior (apenas usado para verificar outliers de ruído)
     :return: (bool, str) -> (válido?, mensagem de erro)
     """
@@ -82,14 +82,14 @@ def validate_data(data, tipo, game_start_date, previous_value=None):
 
         # Validação de campos específicos para movimento
         if tipo == "movement":
-            if "Marsami" not in data or int(data["Marsami"]) <= 0:
+            if "Marsami" not in data or int(data["Marsami"]) <= 0 or int(data["Marsami"]) > int(game["TotalMarsamis"]):
                 return False, "Invalid or missing Marsami number"
             if "RoomOrigin" not in data or int(data["RoomOrigin"]) < 0:
                 return False, "Invalid or missing RoomOrigin"
             if "RoomDestiny" not in data or int(data["RoomDestiny"]) < 0:
                 return False, "Invalid or missing RoomDestiny"
-            if "Status" not in data:
-                return False, "Missing Status field"
+            if "Status" not in data or int(data["Status"]) < 0 or int(data["Status"]) > 2:
+                return False, "Invalid or missing Status field"
 
         # Validação de campos específicos para ruído
         elif tipo == "sound":
@@ -99,6 +99,7 @@ def validate_data(data, tipo, game_start_date, previous_value=None):
                 return False, "Missing timestamp (Hour)"
 
             # Verifica se a data é válida e coerente
+            game_start_date = game['StartDate'] if 'StartDate' in game else datetime.now()
             try:
                 msg_time = datetime.fromisoformat(data["Hour"])
             except ValueError:
@@ -131,12 +132,27 @@ def validate_data(data, tipo, game_start_date, previous_value=None):
 # Armazenamento no MySQL
 # ==============================
 
+def get_active_game(cursor, playerID):
+    """
+    Obtém o jogo ativo para um jogador específico.
+    """
+
+    cursor.callproc("get_active_game", playerID)
+    result = cursor.fetchone()
+
+    if not result:
+        print(f"[ERROR] No active game found for PlayerID {playerID}")
+        return
+
+    print(f"[DEBUG] Active game found for PlayerID {playerID}: {result['IDJogo']}")
+    return result
+
 def store_to_mysql(connection, topic, payload):
     """
     Encaminha a mensagem para a função de armazenamento correta com base no tópico.
     """
 
-    # TODO: Atualizar scripts de store com o MySQL mais recente
+    # TODO: Vai ser ser também validado os alertas neste script
 
     try:
         if topic == f"pisid_g1_movimento_{current_player}":
@@ -155,50 +171,32 @@ def store_movement(connection, payload):
     try:
         payload = payload.replace("'", '"')
         data = json.loads(payload)
-        PlayerID = data["Player"]
+        playerID = data["Player"]
 
-        # Call the stored procedure get_active_game
         cursor = connection.cursor(dictionary=True)
-
-        # TODO: Fix the calling of the stored procedure
-
-        '''
-        cursor.callproc("get_active_game", [PlayerID, 0])
-
-        # Retrieve the OUT parameter value
-        cursor.execute("SELECT @ActiveGame AS ActiveGame")
-        result = cursor.fetchone()
-        active_game_id = result["ActiveGame"] if result else None
-        '''
-        
-        cursor.execute("SELECT IDJogo FROM Game WHERE Game.UserID = 1 AND GameOver = 0")
-        active_game = cursor.fetchone()
-
-        if not active_game:
-            print(f"[ERROR] No active game found for PlayerID {PlayerID}")
+        game = get_active_game(cursor, playerID)
+        if not game:
             return
-        
-        print(f"[DEBUG] Active game found for PlayerID {PlayerID}: {active_game}")
 
-        valid, msg = validate_data(data, "movement", None)  # Pass None for game_start_date if not needed
+        valid, msg = validate_data(data, "movement", game)
         if not valid:
             print(f"[INVALID MOVEMENT] {msg}")
             return
 
         # Insert into the movement table
         cursor.execute("""
-            INSERT INTO movement (OriginRoom, DestinationRoom, Status, MarsamiNum, IDGame)
+            INSERT INTO Movement (OriginRoom, DestinationRoom, Status, MarsamiNum, IDGame)
             VALUES (%s, %s, %s, %s, %s)
         """, (
             data["RoomOrigin"],
             data["RoomDestiny"],
             int(data["Status"]),
             data["Marsami"],
-            active_game["IDJogo"] #Change in future
+            game["IDJogo"]
         ))
         connection.commit()
 
-        print(f"[MOVEMENT] Data stored successfully for PlayerID {PlayerID}")
+        print(f"[MOVEMENT] Data stored successfully for PlayerID {playerID}")
 
     except json.JSONDecodeError as e:
         print(f"[ERROR] Invalid JSON payload: {e}")
@@ -214,43 +212,38 @@ def store_sound(connection, payload):
     """
     try:
         data = json.loads(payload)
-        PlayerID = data["Player"]
-        Sound = data["Sound"]
-        TimeStamp = data["Hour"]
+        playerID = data["Player"]
 
         cursor = connection.cursor(dictionary=True)
-        game = get_active_game(cursor, PlayerID)
-
+        game = get_active_game(cursor, playerID)
         if not game:
-            print(f"[ERROR] No active game found for PlayerID {PlayerID}")
             return
 
-        # TODO: Criar SP ou fazer select direto da tabela
-        game_start_date = game['StartDate'] if 'StartDate' in game else datetime.now()
-
-        valid, msg = validate_data(data, "sound", game_start_date)
+        valid, msg = validate_data(data, "sound", game)
         if not valid:
             print(f"[INVALID SOUND] {msg}")
             return
 
-        # Inserção na tabela message
+        # Inserção na tabela sound
         cursor.execute("""
-            INSERT INTO message (Type, GameID, RegisteredDate) 
-            VALUES ('Sound', %s, %s)
-        """, (game['GameID'], TimeStamp))
-        message_id = cursor.lastrowid
+            INSERT INTO Sound (Sound, Hour IDGame)
+            VALUES (%s, %s, %s)
+        """, (
+            data["Sound"],
+            data["Hour"],
+            game["IDJogo"]
+        ))
         connection.commit()
 
-        # Inserção na tabela sound
-        cursor.execute("INSERT INTO sound (MessageID, Sound) VALUES (%s, %s)", (message_id, Sound))
-        connection.commit()
+        print(f"[SOUND] Data stored successfully for PlayerID {playerID}")
 
     except json.JSONDecodeError as e:
         print(f"[ERROR] Invalid JSON payload: {e}")
     except mysql.connector.Error as err:
         print(f"[ERROR] MySQL sound insert failed: {err}")
     finally:
-        cursor.close()
+        if cursor:
+            cursor.close()
 
 # ==============================
 # Inicialização do cliente MQTT
