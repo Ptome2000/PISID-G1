@@ -23,7 +23,7 @@ DROP TABLE IF EXISTS `marsami_game`.`User` ;
 CREATE TABLE IF NOT EXISTS `marsami_game`.`User` (
                                                      `IDUser` INT NOT NULL AUTO_INCREMENT,
                                                      `Nome` VARCHAR(100) NULL,
-                                                     `Telemovel` DECIMAL(12) NULL,
+                                                     `Telemovel` VARCHAR(12) NULL,
                                                      `Tipo` VARCHAR(3) NOT NULL,
                                                      `Email` VARCHAR(50) NOT NULL,
                                                      `Grupo` INT NULL,
@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS `marsami_game`.`Game` (
                                                      `TotalMarsamis` INT NOT NULL,
                                                      `SoundVarTolerance` DOUBLE NOT NULL,
                                                      `BaseSound` DOUBLE NOT NULL,
+                                                     `TotalRooms` INT NOT NULL,
                                                      PRIMARY KEY (`IDJogo`),
                                                      UNIQUE INDEX `StartDate_UNIQUE` (`StartDate` ASC),
                                                      INDEX `fk_Game_User1_idx` (`UserID` ASC),
