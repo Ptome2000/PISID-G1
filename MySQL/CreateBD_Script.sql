@@ -1,175 +1,139 @@
--- MySQL Workbench Forward Engineering
+-- --------------------------------------------------------
+-- Host:                         127.0.0.1
+-- Server version:               10.4.32-MariaDB - mariadb.org binary distribution
+-- Server OS:                    Win64
+-- HeidiSQL Version:             12.10.0.7000
+-- --------------------------------------------------------
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 
-SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
-SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
-SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+/*!40101 SET NAMES utf8 */;
 
--- -----------------------------------------------------
--- Schema marsami_game
--- -----------------------------------------------------
-DROP SCHEMA IF EXISTS `marsami_game` ;
+/*!50503 SET NAMES utf8mb4 */;
 
--- -----------------------------------------------------
--- Schema marsami_game
--- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `marsami_game` DEFAULT CHARACTER SET utf8 ;
-USE `marsami_game` ;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 
--- -----------------------------------------------------
--- Table `marsami_game`.`User`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `marsami_game`.`User` ;
+/*!40103 SET TIME_ZONE='+00:00' */;
 
-CREATE TABLE IF NOT EXISTS `marsami_game`.`User` (
-                                                     `IDUser` INT NOT NULL AUTO_INCREMENT,
-                                                     `Nome` VARCHAR(100) NULL,
-                                                     `Telemovel` VARCHAR(12) NULL,
-                                                     `Tipo` VARCHAR(3) NOT NULL,
-                                                     `Email` VARCHAR(50) NOT NULL,
-                                                     `Grupo` INT NULL,
-                                                     PRIMARY KEY (`IDUser`),
-                                                     UNIQUE INDEX `Cellphone_UNIQUE` (`Telemovel` ASC),
-                                                     UNIQUE INDEX `Email_UNIQUE` (`Email` ASC),
-                                                     UNIQUE INDEX `UserID_UNIQUE` (`IDUser` ASC))
-    ENGINE = InnoDB;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 
--- -----------------------------------------------------
--- Table `marsami_game`.`Game`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `marsami_game`.`Game` ;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
-CREATE TABLE IF NOT EXISTS `marsami_game`.`Game` (
-                                                     `IDJogo` INT NOT NULL AUTO_INCREMENT,
-                                                     `StartDate` DATETIME NOT NULL,
-                                                     `GameOver` TINYINT NOT NULL,
-                                                     `UserID` INT NOT NULL,
-                                                     `Description` VARCHAR(200) NULL,
-                                                     `GameName` VARCHAR(50) NULL,
-                                                     `TotalMarsamis` INT NOT NULL,
-                                                     `SoundVarTolerance` DOUBLE NOT NULL,
-                                                     `BaseSound` DOUBLE NOT NULL,
-                                                     `TotalRooms` INT NOT NULL,
-                                                     PRIMARY KEY (`IDJogo`),
-                                                     UNIQUE INDEX `StartDate_UNIQUE` (`StartDate` ASC),
-                                                     INDEX `fk_Game_User1_idx` (`UserID` ASC),
-                                                     CONSTRAINT `fk_Game_User1`
-                                                         FOREIGN KEY (`UserID`)
-                                                             REFERENCES `marsami_game`.`User` (`IDUser`)
-                                                             ON DELETE NO ACTION
-                                                             ON UPDATE NO ACTION)
-    ENGINE = InnoDB;
+-- Dumping database structure for marsami_game
+DROP DATABASE IF EXISTS `marsami_game`;
 
+CREATE DATABASE IF NOT EXISTS `marsami_game` /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci */;
 
--- -----------------------------------------------------
--- Table `marsami_game`.`Movement`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `marsami_game`.`Movement` ;
+USE `marsami_game`;
 
-CREATE TABLE IF NOT EXISTS `marsami_game`.`Movement` (
-                                                         `IDMovement` INT NOT NULL AUTO_INCREMENT,
-                                                         `OriginRoom` INT NOT NULL,
-                                                         `DestinationRoom` INT NOT NULL,
-                                                         `Status` ENUM('0', '1', '2') NOT NULL,
-                                                         `Hour` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                                         `MarsamiNum` INT NOT NULL,
-                                                         `IDGame` INT NOT NULL,
-                                                         PRIMARY KEY (`IDMovement`),
-                                                         INDEX `fk_Movement_Game1_idx` (`IDGame` ASC),
-                                                         CONSTRAINT `fk_Movement_Game1`
-                                                             FOREIGN KEY (`IDGame`)
-                                                                 REFERENCES `marsami_game`.`Game` (`IDJogo`)
-                                                                 ON DELETE NO ACTION
-                                                                 ON UPDATE NO ACTION)
-    ENGINE = InnoDB;
+-- Dumping structure for table marsami_game.game
+CREATE TABLE IF NOT EXISTS `game` (
+  `IDJogo` int(11) NOT NULL AUTO_INCREMENT,
+  `StartDate` datetime NOT NULL,
+  `GameOver` tinyint (4) NOT NULL,
+  `Description` varchar(200) DEFAULT NULL,
+  `Username` varchar(50) DEFAULT NULL,
+  `GameName` varchar(50) DEFAULT NULL,
+  `TotalMarsamis` int(11) NOT NULL,
+  `SoundVarTolerance` double NOT NULL,
+  `BaseSound` double NOT NULL,
+  PRIMARY KEY (`IDJogo`),
+  UNIQUE KEY `StartDate_UNIQUE` (`StartDate`),
+  KEY `FK_game_user` (`Username`),
+  CONSTRAINT `FK_game_user` FOREIGN KEY (`Username`) REFERENCES `user` (`Username`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 COLLATE = utf8_general_ci;
 
+-- Data exporting was unselected.
+-- Dumping structure for table marsami_game.marsami
+CREATE TABLE IF NOT EXISTS `marsami` (
+  `IDMarsami` int(11) NOT NULL AUTO_INCREMENT,
+  `MarsamiNumber` int(11) NOT NULL,
+  `CurrStatus` enum ('0', '1', '2') NOT NULL,
+  `CurrRoom` int(11) NOT NULL,
+  `GameID` int(11) NOT NULL,
+  PRIMARY KEY (`IDMarsami`),
+  KEY `fk_Marsami_Game1_idx` (`GameID`),
+  CONSTRAINT `fk_Marsami_Game1` FOREIGN KEY (`GameID`) REFERENCES `game` (`IDJogo`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 COLLATE = utf8_general_ci;
 
--- -----------------------------------------------------
--- Table `marsami_game`.`Marsami`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `marsami_game`.`Marsami` ;
+-- Data exporting was unselected.
+-- Dumping structure for table marsami_game.message
+CREATE TABLE IF NOT EXISTS `message` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Hora` datetime DEFAULT current_timestamp(),
+  `Sala` int(11) DEFAULT NULL,
+  `GameID` int(11) NOT NULL,
+  `Sensor` int(11) DEFAULT NULL,
+  `Leitura` decimal(6, 2) DEFAULT NULL,
+  `TipoAlerta` varchar(50) DEFAULT NULL,
+  `Msg` varchar(100) DEFAULT NULL,
+  `HoraEscrita` datetime DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `fk_Message_Game1_idx` (`GameID`),
+  CONSTRAINT `fk_Message_Game1` FOREIGN KEY (`GameID`) REFERENCES `game` (`IDJogo`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 COLLATE = utf8_general_ci;
 
-CREATE TABLE IF NOT EXISTS `marsami_game`.`Marsami` (
-                                                        `IDMarsami` INT NOT NULL AUTO_INCREMENT,
-                                                        `MarsamiNumber` INT NOT NULL,
-                                                        `CurrStatus` ENUM('0', '1', '2') NOT NULL,
-                                                        `CurrRoom` INT NOT NULL,
-                                                        `GameID` INT NOT NULL,
-                                                        PRIMARY KEY (`IDMarsami`),
-                                                        INDEX `fk_Marsami_Game1_idx` (`GameID` ASC),
-                                                        CONSTRAINT `fk_Marsami_Game1`
-                                                            FOREIGN KEY (`GameID`)
-                                                                REFERENCES `marsami_game`.`Game` (`IDJogo`)
-                                                                ON DELETE NO ACTION
-                                                                ON UPDATE NO ACTION)
-    ENGINE = InnoDB;
+-- Data exporting was unselected.
+-- Dumping structure for table marsami_game.movement
+CREATE TABLE IF NOT EXISTS `movement` (
+  `IDMovement` int(11) NOT NULL AUTO_INCREMENT,
+  `OriginRoom` int(11) NOT NULL,
+  `DestinationRoom` int(11) NOT NULL,
+  `Status` enum ('0', '1', '2') NOT NULL,
+  `Hour` datetime NOT NULL DEFAULT current_timestamp(),
+  `MarsamiNum` int(11) NOT NULL,
+  `IDGame` int(11) NOT NULL,
+  PRIMARY KEY (`IDMovement`),
+  KEY `fk_Movement_Game1_idx` (`IDGame`),
+  CONSTRAINT `fk_Movement_Game1` FOREIGN KEY (`IDGame`) REFERENCES `game` (`IDJogo`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 COLLATE = utf8_general_ci;
 
+-- Data exporting was unselected.
+-- Dumping structure for table marsami_game.occupation
+CREATE TABLE IF NOT EXISTS `occupation` (
+  `IDJogo` int(11) NOT NULL,
+  `NumeroMarsamisOdd` int(11) NOT NULL,
+  `NumeroMarsamisEven` int(11) NOT NULL,
+  `Sala` int(11) NOT NULL,
+  PRIMARY KEY (`IDJogo`),
+  KEY `fk_Occupation_Game1_idx` (`IDJogo`),
+  CONSTRAINT `fk_Occupation_Game1` FOREIGN KEY (`IDJogo`) REFERENCES `game` (`IDJogo`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 COLLATE = utf8_general_ci;
 
--- -----------------------------------------------------
--- Table `marsami_game`.`Sound`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `marsami_game`.`Sound` ;
+-- Data exporting was unselected.
+-- Dumping structure for table marsami_game.sound
+CREATE TABLE IF NOT EXISTS `sound` (
+  `IDSound` int(11) NOT NULL AUTO_INCREMENT,
+  `Sound` varchar(12) NOT NULL,
+  `Hour` datetime NOT NULL,
+  `IDGame` int(11) NOT NULL,
+  PRIMARY KEY (`IDSound`),
+  KEY `fk_Sound_Game1_idx` (`IDGame`),
+  CONSTRAINT `fk_Sound_Game1` FOREIGN KEY (`IDGame`) REFERENCES `game` (`IDJogo`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 COLLATE = utf8_general_ci;
 
-CREATE TABLE IF NOT EXISTS `marsami_game`.`Sound` (
-                                                      `IDSound` INT NOT NULL AUTO_INCREMENT,
-                                                      `Sound` VARCHAR(12) NOT NULL,
-                                                      `Hour` DATETIME NOT NULL,
-                                                      `IDGame` INT NOT NULL,
-                                                      PRIMARY KEY (`IDSound`),
-                                                      INDEX `fk_Sound_Game1_idx` (`IDGame` ASC),
-                                                      CONSTRAINT `fk_Sound_Game1`
-                                                          FOREIGN KEY (`IDGame`)
-                                                              REFERENCES `marsami_game`.`Game` (`IDJogo`)
-                                                              ON DELETE NO ACTION
-                                                              ON UPDATE NO ACTION)
-    ENGINE = InnoDB;
+-- Data exporting was unselected.
+-- Dumping structure for table marsami_game.user
+CREATE TABLE IF NOT EXISTS `user` (
+  `Username` varchar(50) NOT NULL,
+  `Nome` varchar(100) DEFAULT NULL,
+  `Telemovel` decimal(12, 0) DEFAULT NULL,
+  `Tipo` varchar(3) NOT NULL,
+  `Email` varchar(50) NOT NULL,
+  `Grupo` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Username`) USING BTREE,
+  UNIQUE KEY `Email_UNIQUE` (`Email`),
+  UNIQUE KEY `Cellphone_UNIQUE` (`Telemovel`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 COLLATE = utf8_general_ci;
 
+-- Data exporting was unselected.
+/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 
--- -----------------------------------------------------
--- Table `marsami_game`.`Message`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `marsami_game`.`Message` ;
+/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 
-CREATE TABLE IF NOT EXISTS `marsami_game`.`Message` (
-                                                        `ID` INT NOT NULL AUTO_INCREMENT,
-                                                        `Hora` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
-                                                        `Sala` INT NULL,
-                                                        `GameID` INT NOT NULL,
-                                                        `Sensor` INT NULL,
-                                                        `Leitura` DECIMAL(6,2) NULL,
-                                                        `TipoAlerta` VARCHAR(50) NULL,
-                                                        `Msg` VARCHAR(100) NULL,
-                                                        `HoraEscrita` DATETIME NULL,
-                                                        PRIMARY KEY (`ID`),
-                                                        INDEX `fk_Message_Game1_idx` (`GameID` ASC),
-                                                        CONSTRAINT `fk_Message_Game1`
-                                                            FOREIGN KEY (`GameID`)
-                                                                REFERENCES `marsami_game`.`Game` (`IDJogo`)
-                                                                ON DELETE NO ACTION
-                                                                ON UPDATE NO ACTION)
-    ENGINE = InnoDB;
+/*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
 
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 
--- -----------------------------------------------------
--- Table `marsami_game`.`Occupation`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `marsami_game`.`Occupation` ;
-
-CREATE TABLE IF NOT EXISTS `marsami_game`.`Occupation` (
-                                                           `IDJogo` INT NOT NULL,
-                                                           `NumeroMarsamisOdd` INT NOT NULL,
-                                                           `NumeroMarsamisEven` INT NOT NULL,
-                                                           `Sala` INT NOT NULL,
-                                                           INDEX `fk_Occupation_Game1_idx` (`IDJogo` ASC),
-                                                           PRIMARY KEY (`IDJogo`),
-                                                           CONSTRAINT `fk_Occupation_Game1`
-                                                               FOREIGN KEY (`IDJogo`)
-                                                                   REFERENCES `marsami_game`.`Game` (`IDJogo`)
-                                                                   ON DELETE NO ACTION
-                                                                   ON UPDATE NO ACTION)
-    ENGINE = InnoDB;
-
-
-SET SQL_MODE=@OLD_SQL_MODE;
-SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
-SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+/*!40111 SET SQL_NOTES=IFNULL(@OLD_SQL_NOTES, 1) */;
