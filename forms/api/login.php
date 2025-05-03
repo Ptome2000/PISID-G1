@@ -1,5 +1,5 @@
 <?php 
-	$db = "ratosco";
+	$db = "marsami_game";
 	$dbhost = "localhost";
 	$return["message"] = "";
 	$return["success"] = false;
