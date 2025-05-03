@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS `sound` (
 CREATE TABLE IF NOT EXISTS `user` (
   `Username` varchar(50) NOT NULL,
   `Nome` varchar(100) DEFAULT NULL,
-  `Telemovel` decimal(12, 0) DEFAULT NULL,
+  `Telemovel` varchar(15) DEFAULT NULL,
   `Tipo` varchar(3) NOT NULL,
   `Email` varchar(50) NOT NULL,
   `Grupo` int(11) DEFAULT NULL,
