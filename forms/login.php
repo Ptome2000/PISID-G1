@@ -42,7 +42,7 @@
             <a href="#" class="text-white text-decoration-none">Login</a>
           </button>        
         <p class="mt-3 text-center">
-            Don't have an account? <a href="signIn.html">Sign up</a>
+            Don't have an account? <a href="signup.html">Sign up</a>
         </p>
         
         <p class="mt-3 mb-0 text-body-secondary text-center">2025</p>
@@ -60,7 +60,7 @@
 
     <?php
       $user = $_COOKIE['username'] ?? '';
-      if ($user) header('Location: ./dashboard.php')
+      if ($user) header('Location: ./index.php')
     ?>
 </body>
 </html>

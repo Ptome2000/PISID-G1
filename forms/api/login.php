@@ -13,7 +13,7 @@
 		// echo json_encode($return);
 
         setcookie("username", $username, time() + 3600, "/");
-        header("Location: ../dashboard.php");
+        header("Location: ../index.php");
 	} catch (Exception $e) {
 		$return["message"] = "The login failed. Check if the user exists in the database.";
 		header('Content-Type: application/json');	
