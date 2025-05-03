@@ -7,7 +7,7 @@ $admin_user = "root";
 $admin_pass = "";
 
 // Criação da ligação
-$conn = new mysqli($dbhost, $admin_user, $admin_pass);
+$conn = new mysqli($dbhost, $admin_user, $admin_pass, $db);
 if ($conn->connect_error) {
     die("Erro na ligação: " . $conn->connect_error);
 }
@@ -21,17 +21,25 @@ $phone = $_POST['phone'];
 
 // inserir user na bd
 try {
-    $sql = "CALL criar_utilizador($name, $username, $email, $password, $phone)"
-    if ($conn->query($sql) === TRUE) {
+    $stmt = $conn->prepare("CALL criar_utilizador(?, ?, ?, ?, ?)");
+    if ($stmt === false) {
+        throw new Exception("Erro na preparação da query: " . $conn->error);
+    }
+
+    $stmt->bind_param("sssss", $name, $username, $email, $password, $phone);
+
+    if ($stmt->execute()) {
         echo "Utilizador criado com sucesso.<br>";
         header("Location: ../login.php");
     } else {
-        echo "Erro ao criar utilizador: " . $conn->error . "<br>";
+        echo "Erro ao criar utilizador: " . $stmt->error . "<br>";
     }
+
+    $stmt->close();
 } catch (Exception $e) {
     $return["message"] = "The login failed. Check if the user exists in the database.";
     echo $e;
-    // header('Content-Type: application/json');	
+    // header('Content-Type: application/json');
 //     header("Location: ../login.php?msg=Username or Password not valid");
 }
 
