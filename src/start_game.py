@@ -1,12 +1,14 @@
 import subprocess
 import threading
 from pathlib import Path
+import random
 
 import mysql.connector
 import sys
 import os
 import paho.mqtt.client as mqtt
 import time
+from utils.Enums import GameActions
 
 db_host = os.getenv("DB_HOST", "localhost") # DB host (default: localhost)
 db_user = os.getenv("DB_USER", "root") # MySQL user (default: root)
@@ -86,6 +88,29 @@ def createMysqlGame():
 
 
 # correr o jogo
+def score(client):
+    # TODO: pegar room da base de dados
+    room = random.randint(1, 10)
+    message = {"Type": "Score", "Player": current_player, "Room": room}
+    print(str(message))
+    client.publish("pisid_mazeact", str(message))
+def play_game(client):
+    action = random.randint(1, 5)
+    match action:
+        case GameActions.SCORE:
+            score(client)
+            print("SCORE")
+        case GameActions.OPEN_DOOR:
+            print("OPEN_DOOR")
+        case GameActions.CLOSE_DOOR:
+            print("CLOSE_DOOR")
+        case GameActions.OPEN_ALL_DOOR:
+            print("OPEN_ALL_DOOR")
+        case GameActions.CLOSE_ALL_DOOR:
+            print("CLOSE_ALL_DOOR")
+
+
+# controlar estados do jogo
 
 PC1_READY = 0
 PC2_READY = 0
@@ -114,6 +139,7 @@ def controlState(client):
     except Exception as e:
         print("Erro na thread:", e)
 
+# metodos MQTT
 def on_connect(client, userdata, flags, reason_code, properties):
     print(f"Connected with result code {reason_code}")
     client.subscribe("g1_control_pc1")
@@ -147,8 +173,10 @@ def on_message(client, userdata, msg):
                 creationflags=subprocess.CREATE_NEW_CONSOLE,
             )
     if (msg.topic == "g1_control_pc1" and msg.payload.decode() == "START"):
-        # play_game()
         print('GAME IS READY TO PLAY...')
+        while True:
+            play_game(client)
+            time.sleep(2)
 
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)

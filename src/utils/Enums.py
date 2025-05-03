@@ -9,3 +9,11 @@ class AlertType(Enum):
     def __init__(self, code, message):
         self.code = code
         self.message = message
+
+
+class GameActions:
+    SCORE = 1
+    OPEN_DOOR = 2
+    CLOSE_DOOR = 3
+    CLOSE_ALL_DOOR = 4
+    OPEN_ALL_DOOR = 5

@@ -20,7 +20,7 @@ if len(sys.argv) != 2:
 
 USER_NAME = sys.argv[1]
 
-from src.utils.Enums import AlertType
+from utils.Enums import AlertType
 
 # ==============================
 # Configurações do sistema
