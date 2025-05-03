@@ -3,11 +3,22 @@
 # ==============================
 
 import os
+import threading
+
 from dotenv import load_dotenv
 import paho.mqtt.client as mqtt              # Biblioteca MQTT para receber mensagens dos tópicos
 import mysql.connector                       # Biblioteca para conectar ao MySQL
 import json                                  # Para decodificar payloads JSON recebidos via MQTT
-from datetime import datetime                # Para validações e formatação de datas
+from datetime import datetime                # Para validações e formatação de
+import sys
+
+
+# guardar argumentos recebidos
+if len(sys.argv) != 2:
+    print("Usage: python mqtt_to_mysql_writer.py username")
+    sys.exit(1)
+
+USER_NAME = sys.argv[1]
 
 from src.utils.Enums import AlertType
 
@@ -34,15 +45,29 @@ def on_connect(client, userdata, flags, reason_code, properties):
     """
     print(f"Connected to MQTT broker with result code {reason_code}")
     client.subscribe(f"pisid_g1_movimento_{current_player}")
-    #client.subscribe(f"pisid_g1_ruido_{current_player}")
+    client.subscribe(f"pisid_g1_ruido_{current_player}")
+    client.subscribe("g1_control_pc2")
 
+
+ACK_SENT = False
 def on_message(client, userdata, msg):
+    global ACK_SENT
     """
     Callback chamada ao receber uma mensagem de um dos tópicos MQTT.
     Encaminha a mensagem para a função de armazenamento no MySQL.
     """
     print(f"{msg.topic} {msg.payload}")
+    # threading.Thread(target=store_to_mysql, args=(
+    #     userdata['connection'],
+    #     msg.topic,
+    #     msg.payload.decode(),
+    # )).start()
     store_to_mysql(userdata['connection'], msg.topic, msg.payload.decode())
+    if msg.topic == "g1_control_pc2" and msg.payload.decode() == "SYN":
+        if not ACK_SENT:
+            client.publish("g1_control_pc2", "ACK")
+            print('ACK SENT')
+            ACK_SENT = True
 
 # ==============================
 # Conexão à base de dados
@@ -158,8 +183,8 @@ def validate_data(data, tipo, game, previous_value=None):
                 return False, "Timestamp is before the game start"
 
             # Verifica se o valor do som é um outlier
-            normal_noise = float(data.get("NormalNoise", 0))
-            tolerance = float(data.get("Tolerance", 0))
+            normal_noise = float(game.get("BaseSound", 0))
+            tolerance = float(game.get("SoundVarTolerance", 0))
             threshold = (normal_noise + tolerance) * 1.75
             current_sound = float(data["Sound"])
 
@@ -179,19 +204,24 @@ def validate_data(data, tipo, game, previous_value=None):
 # Armazenamento no MySQL
 # ==============================
 
-def get_active_game(cursor, playerID):
+def get_active_game(cursor):
     """
     Obtém o jogo ativo para um jogador específico.
     """
 
-    cursor.callproc("get_active_game", playerID)
-    result = cursor.fetchone()
+    cursor.callproc("get_active_game", (str(USER_NAME),))
+    # result = cursor.fetchone()
+    # print(result)
+    result = None
+    for r in cursor.stored_results():
+        result = r.fetchone()
+        print(result)
 
     if not result:
-        print(f"[ERROR] No active game found for PlayerID {playerID}")
+        print(f"[ERROR] No active game found for Player {USER_NAME}")
         return
 
-    print(f"[DEBUG] Active game found for PlayerID {playerID}: {result['IDJogo']}")
+    print(f"[DEBUG] Active game found for Player {USER_NAME}: {result['IDJogo']}")
     return result
 
 def store_to_mysql(connection, topic, payload):
@@ -218,10 +248,9 @@ def store_movement(connection, payload):
     try:
         payload = payload.replace("'", '"')
         data = json.loads(payload)
-        playerID = data["Player"]
 
         cursor = connection.cursor(dictionary=True)
-        game = get_active_game(cursor, playerID)
+        game = get_active_game(cursor)
         if not game:
             return
 
@@ -243,7 +272,7 @@ def store_movement(connection, payload):
         ))
         connection.commit()
 
-        print(f"[MOVEMENT] Data stored successfully for PlayerID {playerID}")
+        print(f"[MOVEMENT] Data stored successfully for Player {USER_NAME}")
 
     except json.JSONDecodeError as e:
         print(f"[ERROR] Invalid JSON payload: {e}")
@@ -259,10 +288,9 @@ def store_sound(connection, payload):
     """
     try:
         data = json.loads(payload)
-        playerID = data["Player"]
 
         cursor = connection.cursor(dictionary=True)
-        game = get_active_game(cursor, playerID)
+        game = get_active_game(cursor)
         if not game:
             return
 
@@ -275,7 +303,7 @@ def store_sound(connection, payload):
 
         # Inserção na tabela sound
         cursor.execute("""
-            INSERT INTO Sound (Sound, Hour IDGame)
+            INSERT INTO Sound (Sound, Hour, IDGame)
             VALUES (%s, %s, %s)
         """, (
             data["Sound"],
@@ -284,7 +312,7 @@ def store_sound(connection, payload):
         ))
         connection.commit()
 
-        print(f"[SOUND] Data stored successfully for PlayerID {playerID}")
+        print(f"[SOUND] Data stored successfully for Player {USER_NAME}")
 
     except json.JSONDecodeError as e:
         print(f"[ERROR] Invalid JSON payload: {e}")

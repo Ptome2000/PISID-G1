@@ -99,8 +99,19 @@ def start_sending_loop():
 
 def on_connect(client, userdata, flags, reason_code, properties):
     print(f"Connected with result code {reason_code}")
+    client.subscribe("g1_control_pc1")
     threading.Thread(target=start_sending_loop).start()
-    # client.subscribe("pisid_g1_player")
+
+ACK_SENT = False
+def on_message(client, userdata, msg):
+    global ACK_SENT
+    print(msg.topic + " " + str(msg.payload))
+    if msg.topic == "g1_control_pc1" and msg.payload.decode() == "SYN":
+        if not ACK_SENT:
+            client.publish("g1_control_pc1", "ACK")
+            print('ACK SENT')
+            ACK_SENT = True
+
 
 # ==============================
 # MQTT Setup
@@ -108,5 +119,6 @@ def on_connect(client, userdata, flags, reason_code, properties):
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqttc.on_connect = on_connect
+mqttc.on_message = on_message
 mqttc.connect(broker_host, broker_port, 60)
 mqttc.loop_forever()

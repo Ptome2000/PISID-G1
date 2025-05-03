@@ -1,13 +1,19 @@
+import sys
+
 import paho.mqtt.client as mqtt
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
 def on_connect(client, userdata, flags, reason_code, properties):
     print(f"Connected with result code {reason_code}")
-    client.subscribe("pisid_mazesound_1")
-    for i in range(500):
-        res = mqttc.publish("pisid_mazesound_1", '{Player:1, Hour:"2024-07-04 16:29:21.281898", Sound:19.0}')
-        print(f'enviado {i} {res}')
+    client.subscribe("g1_control_pc1")
+    for i in range(30):
+        mqttc.publish("g1_control_pc1", "ACK")
+        print('ACK Enviado')
+    # sys.exit()
+    # for i in range(500):
+    #     res = mqttc.publish("pisid_mazesound_1", '{Player:1, Hour:"2024-07-04 16:29:21.281898", Sound:19.0}')
+    #     print(f'enviado {i} {res}')
 
     # client.subscribe("pisid_g1_movimento_1")
     # for i in range(500):
