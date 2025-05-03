@@ -1,9 +1,9 @@
-CREATE PROCEDURE get_active_game(IN UserID INT)
+CREATE PROCEDURE get_active_game(IN `user_name` VARCHAR(50))
 BEGIN
-    -- Check if there is any active game for the given UserID
+    -- Esta função devolve o jogo ativo do utilizador
     SELECT *
     FROM Game
-    WHERE Game.UserID = UserID
+    WHERE Game.Username = user_name
       AND GameOver = 0
     LIMIT 1;
 END

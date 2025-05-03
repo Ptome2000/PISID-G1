@@ -9,6 +9,8 @@ import mysql.connector                       # Biblioteca para conectar ao MySQL
 import json                                  # Para decodificar payloads JSON recebidos via MQTT
 from datetime import datetime                # Para validações e formatação de datas
 
+from src.utils.Enums import AlertType
+
 # ==============================
 # Configurações do sistema
 # ==============================
@@ -65,38 +67,45 @@ def connect_mysql():
 # Validação dos dados recebidos
 # ==============================
 
-def deal_alerts(data, game, game_start_date):
+def deal_alerts(data, game, cursor):
     """
     Valida e gera alertas com base nos cenários descritos.
 
     :param data: Dicionário com os dados da mensagem de som.
     :param game: Dicionário com informações do jogo ativo.
-    :param game_start_date: Data e hora de início do jogo.
+    :param cursor: Cursor da conexão MySQL.
     """
 
-    # TODO: Finish this with SP to store movement and move auxiliary functions to a separate file
     try:
+        game_start_date = game['StartDate'] if 'StartDate' in game else datetime.now()
         current_sound = float(data["Sound"])
         normal_noise = float(data.get("BaseSound", 0))
         tolerance = float(data.get("SoundVarTolerance", 0))
         max_limit = (normal_noise + tolerance)
         threshold_90 = max_limit * 0.9
-        threshold_10 = max_limit * 0.1
+        threshold_10 = max_limit * 0.
 
         # 1 Alert: If sound level exceeds 90% of the maximum limit
         if current_sound > threshold_90:
             print("[ALERT] Sound level exceeded 90% of the maximum limit!")
+            alert = AlertType.SOUND_EXCEEDS_90_PERCENT
+            cursor.callproc("post_alert", (current_sound, None, 1, current_sound, alert.code, alert.message))
 
         # Cenário 2: Alertar 1x se o nível de som baixar de 90%
         elif current_sound <= threshold_90:
             print("[ALERT] Sound level dropped below 90% of the maximum limit!")
+            alert = AlertType.SOUND_BELOW_90_PERCENT
+            cursor.callproc("post_alert", (current_sound, None, 1, current_sound, alert.code, alert.message))
 
         # Cenário 3: Após 30s do início do jogo, alertar se o som estiver demasiado perto do ruído normal
 
 
+
         # Cenário 4: Alerta caso o limite máximo tenha sido ultrapassado
-        if current_sound > max_limit:
+        elif current_sound > max_limit:
             print("[GAME OVER] Maximum sound limit exceeded! The maze doors are closed, and the game is lost.")
+            alert = AlertType.SOUND_EXCEEDS_MAX_LIMIT
+            cursor.callproc("post_alert", (current_sound, None, 1, current_sound, alert.code, alert.message))
 
     except KeyError as e:
         print(f"[ERROR] Missing key in data: {e}")
@@ -161,8 +170,6 @@ def validate_data(data, tipo, game, previous_value=None):
             if previous_value is not None:
                 if abs(current_sound - previous_value) > previous_value * 0.75:
                     return False, "Sound variation is too abrupt (outlier detection)"
-
-            deal_alerts(data, game, game_start_date)
 
         return True, "Valid"
     except (KeyError, ValueError, TypeError) as e:
@@ -263,6 +270,8 @@ def store_sound(connection, payload):
         if not valid:
             print(f"[INVALID SOUND] {msg}")
             return
+
+            deal_alerts(data, game, cursor)
 
         # Inserção na tabela sound
         cursor.execute("""
