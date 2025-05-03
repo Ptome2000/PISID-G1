@@ -1,8 +1,8 @@
 CREATE DEFINER=`admin`@`localhost` PROCEDURE `remover_utilizador`(
-    IN `userid` INT
+    IN `in_username` INT
 )
 SQL SECURITY DEFINER
 BEGIN
     DELETE FROM `user`
-    WHERE IDUser = userid;
+    WHERE Username = in_username;
 END
