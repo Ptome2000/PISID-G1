@@ -87,14 +87,27 @@ def on_connect(client, userdata, flags, reason_code, properties):
     print(f"Connected with result code {reason_code}")
     client.subscribe("pisid_mazesound_1")
     client.subscribe("pisid_mazemov_1")
+    client.subscribe("g1_control_pc1")
 
 # === [5] MQTT callback: on message ===
+ACK_SENT = False
+GAME_START = False
 def on_message(client, userdata, msg):
+    global ACK_SENT, GAME_START
     print(msg.topic + " " + str(msg.payload))
     if msg.topic == "pisid_mazemov_1":
         insertData("movimento", msg.payload)
+        if not GAME_START:
+            client.publish("g1_control_pc1", "START")
+            GAME_START = True
     elif msg.topic == "pisid_mazesound_1":
         insertData("ruido", msg.payload)
+    elif msg.topic == "g1_control_pc1" and msg.payload.decode() == "SYN":
+        if not ACK_SENT:
+            client.publish("g1_control_pc1", "ACK")
+            print('ACK SENT')
+            ACK_SENT = True
+
 
 # === [6] MQTT client setup and loop ===
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
