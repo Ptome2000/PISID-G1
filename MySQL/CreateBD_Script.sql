@@ -30,7 +30,7 @@ USE `marsami_game`;
 -- Dumping structure for table marsami_game.game
 CREATE TABLE IF NOT EXISTS `game` (
   `IDJogo` int(11) NOT NULL AUTO_INCREMENT,
-  `StartDate` datetime NOT NULL,
+  `StartDate` datetime DEFAULT CURRENT_TIMESTAMP,
   `GameOver` tinyint (4) NOT NULL,
   `Description` varchar(200) DEFAULT NULL,
   `Username` varchar(50) DEFAULT NULL,
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS `message` (
   `Leitura` decimal(6, 2) DEFAULT NULL,
   `TipoAlerta` varchar(50) DEFAULT NULL,
   `Msg` varchar(100) DEFAULT NULL,
-  `HoraEscrita` datetime DEFAULT current_timestamp(),
+  `HoraEscrita` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`ID`),
   KEY `fk_Message_Game1_idx` (`GameID`),
   CONSTRAINT `fk_Message_Game1` FOREIGN KEY (`GameID`) REFERENCES `game` (`IDJogo`) ON DELETE NO ACTION ON UPDATE NO ACTION
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS `movement` (
   `OriginRoom` int(11) NOT NULL,
   `DestinationRoom` int(11) NOT NULL,
   `Status` enum ('0', '1', '2') NOT NULL,
-  `Hour` datetime NOT NULL DEFAULT current_timestamp(),
+  `Hour` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `MarsamiNum` int(11) NOT NULL,
   `IDGame` int(11) NOT NULL,
   PRIMARY KEY (`IDMovement`),
