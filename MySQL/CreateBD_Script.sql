@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS `game` (
   `TotalMarsamis` int(11) NOT NULL,
   `SoundVarTolerance` double NOT NULL,
   `BaseSound` double NOT NULL,
+  `TotalRooms` int(11) NOT NULL,
   PRIMARY KEY (`IDJogo`),
   UNIQUE KEY `StartDate_UNIQUE` (`StartDate`),
   KEY `FK_game_user` (`Username`),
@@ -61,14 +62,14 @@ CREATE TABLE IF NOT EXISTS `marsami` (
 -- Dumping structure for table marsami_game.message
 CREATE TABLE IF NOT EXISTS `message` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
-  `Hora` datetime DEFAULT current_timestamp(),
+  `Hora` datetime DEFAULT NULL,
   `Sala` int(11) DEFAULT NULL,
   `GameID` int(11) NOT NULL,
   `Sensor` int(11) DEFAULT NULL,
   `Leitura` decimal(6, 2) DEFAULT NULL,
   `TipoAlerta` varchar(50) DEFAULT NULL,
   `Msg` varchar(100) DEFAULT NULL,
-  `HoraEscrita` datetime DEFAULT NULL,
+  `HoraEscrita` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`ID`),
   KEY `fk_Message_Game1_idx` (`GameID`),
   CONSTRAINT `fk_Message_Game1` FOREIGN KEY (`GameID`) REFERENCES `game` (`IDJogo`) ON DELETE NO ACTION ON UPDATE NO ACTION
@@ -118,7 +119,7 @@ CREATE TABLE IF NOT EXISTS `sound` (
 CREATE TABLE IF NOT EXISTS `user` (
   `Username` varchar(50) NOT NULL,
   `Nome` varchar(100) DEFAULT NULL,
-  `Telemovel` decimal(12, 0) DEFAULT NULL,
+  `Telemovel` varchar(12) DEFAULT NULL,
   `Tipo` varchar(3) NOT NULL,
   `Email` varchar(50) NOT NULL,
   `Grupo` int(11) DEFAULT NULL,
