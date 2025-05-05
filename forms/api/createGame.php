@@ -15,15 +15,16 @@ echo $game_name;
 $output = shell_exec('where python'); // Windows
 echo "<pre>$output</pre>";
 
-
-// $comando = 'start cmd /k "cd ../../ && python ./src/start_game.py"';
-// shell_exec($comando);
-
-$comando = 'start cmd /k "cd ../../ && pip install -r requirements.txt && python ./src/start_game.py && pause"';
+$comando = sprintf(
+    'start cmd /k "cd ../../ && pip install -r requirements.txt && python ./src/start_game.py %s %s %s && pause"',
+    escapeshellarg($db_user),
+    escapeshellarg($game_name),
+    escapeshellarg($game_description)
+);
+echo $comando;
 shell_exec($comando);
 
-
-
+header("Location: ../index.php");
 
 
 ?>
