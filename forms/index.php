@@ -13,12 +13,15 @@
         <main class="col-lg-8 col-md-10 mx-auto">
             <h1 class="h2 mb-4">
                 Dashboard - <?php 
-                    $user = $_COOKIE['username'] ?? ''; 
+                    session_start();
+
+                    $user = $_SESSION['username'] ?? ''; 
                     if (!$user) {
                         header('Location: ./login.php');
                     }
                     echo $user;
                 ?>
+                 - <a href="api/logout.php">Logout</a>
             </h1>
             <hr>
 
@@ -49,7 +52,7 @@
                             <td>date</td>
                             <td>20</td>
                             <td>Running</td>
-                            <td><button class="btn btn-primary">Edit Game</button></td>
+                            <td><a href="editGame.html" class="btn btn-primary">Edit Game</a></td>
                         </tr>
                         <tr>
                             <td>2</td>
@@ -58,7 +61,7 @@
                             <td>date</td>
                             <td>5</td>
                             <td>Ended</td>
-                            <td><button class="btn btn-primary">Edit Game</button></td>
+                            <td><a href="editGame.html" class="btn btn-primary">Edit Game</a></td>
                         </tr>
                     </tbody>
                 </table>
