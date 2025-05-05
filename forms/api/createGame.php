@@ -2,18 +2,10 @@
 session_start();
 $db = "marsami_game";
 $dbhost = "localhost";
-// $return["message"] = "";
-// $return["success"] = false;
 $db_user = $_SESSION["username"];
-$db_password = $_SESSION["user_pwd"];
 
 $game_name = $_POST["name"];
 $game_description = $_POST["description"];
-
-echo $game_name;
-
-$output = shell_exec('where python'); // Windows
-echo "<pre>$output</pre>";
 
 $comando = sprintf(
     'start cmd /k "cd ../../ && pip install -r requirements.txt && python ./src/start_game.py %s %s %s && pause"',
@@ -21,7 +13,8 @@ $comando = sprintf(
     escapeshellarg($game_name),
     escapeshellarg($game_description)
 );
-echo $comando;
+
+// echo $comando;
 shell_exec($comando);
 
 header("Location: ../index.php");
