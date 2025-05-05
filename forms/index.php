@@ -49,7 +49,7 @@
                             <td>date</td>
                             <td>20</td>
                             <td>Running</td>
-                            <td><button class="btn btn-primary">Edit Game</button></td>
+                            <td><a href="editGame.html" class="btn btn-primary">Edit Game</a></td>
                         </tr>
                         <tr>
                             <td>2</td>
@@ -58,7 +58,7 @@
                             <td>date</td>
                             <td>5</td>
                             <td>Ended</td>
-                            <td><button class="btn btn-primary">Edit Game</button></td>
+                            <td><a href="editGame.html" class="btn btn-primary">Edit Game</a></td>
                         </tr>
                     </tbody>
                 </table>
