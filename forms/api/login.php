@@ -1,4 +1,5 @@
 <?php 
+
 	$db = "marsami_game";
 	$dbhost = "localhost";
 	$return["message"] = "";
@@ -12,7 +13,11 @@
 		$return["success"] = true;
 		// echo json_encode($return);
 
-        setcookie("username", $username, time() + 3600, "/");
+        session_start();
+        // setcookie("username", $username, time() + 3600, "/");
+        
+        $_SESSION["username"] = $username;
+        $_SESSION["user_pwd"] = $password;
         header("Location: ../index.php");
 	} catch (Exception $e) {
 		$return["message"] = "The login failed. Check if the user exists in the database.";

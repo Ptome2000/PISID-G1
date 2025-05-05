@@ -14,15 +14,15 @@
             <h1 class="h2 mb-4">Create New Game</h1>
             <hr>
 
-            <form>
+            <form method="post" action="api/createGame.php">
                 <div class="mb-3">
                     <label for="gameName" class="form-label">Game Name</label>
-                    <input type="text" class="form-control bg-dark text-white border-light" id="gameName" placeholder="Game Name" required>
+                    <input type="text" name="name" class="form-control bg-dark text-white border-light" id="gameName" placeholder="Game Name" required>
                 </div>
 
                 <div class="mb-3">
                     <label for="gameDescription" class="form-label">Description</label>
-                    <textarea class="form-control bg-dark text-white border-light" id="gameDescription" rows="3" placeholder="Description" required></textarea>
+                    <textarea name="description" class="form-control bg-dark text-white border-light" id="gameDescription" rows="3" placeholder="Description" required></textarea>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100 py-2">Create Game</button>

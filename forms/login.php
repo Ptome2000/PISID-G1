@@ -59,7 +59,8 @@
     </script>
 
     <?php
-      $user = $_COOKIE['username'] ?? '';
+      session_start();
+      $user = $_SESSION['username'] ?? '';
       if ($user) header('Location: ./index.php')
     ?>
 </body>
