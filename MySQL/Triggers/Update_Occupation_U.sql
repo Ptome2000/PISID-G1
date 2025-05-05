@@ -1,4 +1,4 @@
-create definer = root@localhost trigger Update_Occupation_U
+create definer = admin@localhost trigger Update_Occupation_U
     after update
                      on Marsami
                      for each row

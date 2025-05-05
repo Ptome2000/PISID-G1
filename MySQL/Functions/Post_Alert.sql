@@ -1,3 +1,5 @@
+DELIMITER //
+
 CREATE DEFINER=`app`@`localhost` PROCEDURE `post_alert`(
     IN `Hora` datetime,
     IN `Sala` int(11),
@@ -10,4 +12,6 @@ BEGIN
     -- Insere os dados na tabela de mensagens
     INSERT INTO `message` (`Hora`, `Sala`, `Sensor`, `Leitura`,`TipoAlerta`,`Msg`)
     VALUES (Hora, Sala, Sensor, Leitura, TipoAlerta, Msg);
-END
+END //
+
+DELIMITER ;

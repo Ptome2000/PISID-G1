@@ -1,4 +1,4 @@
-create definer = root@localhost trigger Update_Marsami
+create definer = admin@localhost trigger Update_Marsami
     after insert
     on Movement
     for each row

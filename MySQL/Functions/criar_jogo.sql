@@ -1,3 +1,5 @@
+DELIMITER //
+
 CREATE DEFINER=`app`@`localhost` PROCEDURE `criar_jogo`(
     IN `in_username` VARCHAR(50),
     IN `in_name` VARCHAR(50),
@@ -8,4 +10,6 @@ BEGIN
     INSERT INTO `game` (`Username`, `GameName`, `Description`)
     VALUES (in_username, in_name, in_description);
 
-END
+END //
+
+DELIMITER ;

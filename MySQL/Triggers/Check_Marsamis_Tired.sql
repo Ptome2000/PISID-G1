@@ -1,4 +1,4 @@
-create definer = root@localhost trigger Check_Marsamis_Tired
+create definer = admin@localhost trigger Check_Marsamis_Tired
     after update
                      on Marsami
                      for each row
