@@ -7,15 +7,15 @@ $db_user = $_SESSION["username"];
 $game_name = $_POST["name"];
 $game_description = $_POST["description"];
 
-$comando = sprintf(
-    'start cmd /k "cd ../../ && pip install -r requirements.txt && python ./src/start_game.py %s %s %s && pause"',
+$cmd = sprintf(
+    'start c:/xampp/htdocs/mazerun/scripts/start_pc2.bat %s %s %s && pause',
     escapeshellarg($db_user),
     escapeshellarg($game_name),
     escapeshellarg($game_description)
 );
 
 // echo $comando;
-shell_exec($comando);
+shell_exec($cmd);
 
 header("Location: ../index.php");
 

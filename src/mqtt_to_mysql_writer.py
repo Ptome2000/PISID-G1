@@ -14,11 +14,12 @@ import sys
 
 
 # guardar argumentos recebidos
-if len(sys.argv) != 2:
-    print("Usage: python mqtt_to_mysql_writer.py username")
-    sys.exit(1)
+# if len(sys.argv) != 2:
+#     print("Usage: python mqtt_to_mysql_writer.py username")
+#     sys.exit(1)
 
-USER_NAME = sys.argv[1]
+# USER_NAME = sys.argv[1]
+USER_NAME = ""
 
 from utils.Enums import AlertType
 
@@ -337,6 +338,9 @@ client.on_message = on_message
 connection = connect_mysql()
 client.user_data_set({'connection': connection})
 
-# Conecta ao broker e inicia o loop para escutar mensagens
-client.connect(broker_host, broker_port, 60)
-client.loop_forever()
+def startScript(username):
+    global client, USER_NAME
+    # Conecta ao broker e inicia o loop para escutar mensagens
+    USER_NAME = username
+    client.connect(broker_host, broker_port, 60)
+    client.loop_forever()

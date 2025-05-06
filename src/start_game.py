@@ -9,6 +9,7 @@ import os
 import paho.mqtt.client as mqtt
 import time
 from utils.Enums import GameActions
+from mqtt_to_mysql_writer import startScript
 
 db_host = os.getenv("DB_HOST", "localhost") # DB host (default: localhost)
 db_user = os.getenv("DB_USER", "root") # MySQL user (default: root)
@@ -17,7 +18,7 @@ sql_db = os.getenv("SQL_DB", "marsami_game") # MySQL database (default: marsami_
 broker_host = os.getenv("BROKER_HOST", "broker.emqx.io")
 broker_port = int(os.getenv("BROKER_PORT", 1883))
 current_player = os.getenv("CURRENT_PLAYER", 1) # Currently active player (default: 1)
-timeout = 60
+timeout = os.getenv("START_GAME_TIMEOUT", 60)
 
 # guardar argumentos recebidos
 if len(sys.argv) != 4:
@@ -28,6 +29,7 @@ gameUser = sys.argv[1]
 gameName = sys.argv[2]
 gameDescription = sys.argv[3]
 
+threading.Thread(target=startScript, args=(gameUser,)).start()
 
 # Conectar ao MQTT e enviar SYN -> PC1 e SYN -> PC2 com timeout de 30s
 
@@ -72,7 +74,7 @@ def createMysqlGame():
     game_description = "Descrição do jogo"
 
     # Chamar stored procedure com parâmetros
-    cursor.callproc("createGame", [
+    cursor.callproc("criar_jogo", [
         gameUser,
         gameName,
         gameDescription,
@@ -164,7 +166,7 @@ def on_message(client, userdata, msg):
             print('TIMEOUT: scripts ainda não foram iniciados')
             sys.exit()
         if status == "OK":
-            # createMysqlGame()
+            createMysqlGame()
             script_dir = Path(__file__).parent.resolve()
             exe_path = script_dir.parent / "game" / "mazerun.exe"
             subprocess.Popen(

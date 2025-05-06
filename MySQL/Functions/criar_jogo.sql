@@ -1,15 +1,39 @@
 DELIMITER //
 
 CREATE DEFINER=`app`@`localhost` PROCEDURE `criar_jogo`(
-    IN `in_username` VARCHAR(50),
-    IN `in_name` VARCHAR(50),
-    IN `in_description` VARCHAR(200)
+	IN `username` VARCHAR(50),
+	IN `game_description` VARCHAR(200),
+	IN `game_name` VARCHAR(50),
+	IN `number_marsamis` INT,
+	IN `noise_tolerance` DOUBLE,
+	IN `base_noise` DOUBLE
 )
+LANGUAGE SQL
+NOT DETERMINISTIC
+CONTAINS SQL
+SQL SECURITY DEFINER
+COMMENT ''
 BEGIN
-    -- Insere os dados na tabela game
-    INSERT INTO `game` (`Username`, `GameName`, `Description`)
-    VALUES (in_username, in_name, in_description);
-
+	UPDATE game SET GameOver = 1 WHERE Game.Username = username;
+	INSERT INTO game (
+		StartDate,
+		GameOver,
+        Username,
+        Description,
+        GameName,
+        TotalMarsamis,
+        SoundVarTolerance,
+        BaseSound
+    ) VALUES (
+    	NOW(),
+    	0,
+        username,
+        game_description,
+        game_name,
+        number_marsamis,
+        noise_tolerance,
+        base_noise
+    );
 END //
 
 DELIMITER ;
