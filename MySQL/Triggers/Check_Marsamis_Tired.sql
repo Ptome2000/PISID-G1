@@ -1,3 +1,4 @@
+DELIMITER //
 create definer = admin@localhost trigger Check_Marsamis_Tired
     after update
                      on Marsami
@@ -32,5 +33,7 @@ UPDATE Game
 SET GameOver = 1
 WHERE IDJogo = NEW.GameID;
 END IF;
-end;
+end //
+
+DELIMITER ;
 

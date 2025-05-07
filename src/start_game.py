@@ -18,7 +18,7 @@ sql_db = os.getenv("SQL_DB", "marsami_game") # MySQL database (default: marsami_
 broker_host = os.getenv("BROKER_HOST", "broker.emqx.io")
 broker_port = int(os.getenv("BROKER_PORT", 1883))
 current_player = os.getenv("CURRENT_PLAYER", 1) # Currently active player (default: 1)
-timeout = os.getenv("START_GAME_TIMEOUT", 60)
+timeout = int(os.getenv("START_GAME_TIMEOUT", 60))
 
 # guardar argumentos recebidos
 if len(sys.argv) != 4:
@@ -96,6 +96,8 @@ def score(client):
     message = {"Type": "Score", "Player": current_player, "Room": room}
     print(str(message))
     client.publish("pisid_mazeact", str(message))
+
+
 def play_game(client):
     action = random.randint(1, 5)
     match action:
@@ -169,6 +171,7 @@ def on_message(client, userdata, msg):
             createMysqlGame()
             script_dir = Path(__file__).parent.resolve()
             exe_path = script_dir.parent / "game" / "mazerun.exe"
+            print(exe_path)
             subprocess.Popen(
                 f'start "Mazerun" "{exe_path}" {current_player}',
                 shell=True,
