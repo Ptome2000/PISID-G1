@@ -131,8 +131,8 @@ DELIMITER ;
 -- Dumping structure for table marsami_game.game
 CREATE TABLE IF NOT EXISTS `game` (
   `IDJogo` int(11) NOT NULL AUTO_INCREMENT,
-  `StartDate` datetime NOT NULL,
-  `GameOver` tinyint(4) NOT NULL,
+  `StartDate` datetime DEFAULT CURRENT_TIMESTAMP,
+  `GameOver` tinyint (4) NOT NULL,
   `Description` varchar(200) DEFAULT NULL,
   `Username` varchar(50) DEFAULT NULL,
   `GameName` varchar(50) DEFAULT NULL,
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS `game` (
   UNIQUE KEY `StartDate_UNIQUE` (`StartDate`),
   KEY `FK_game_user` (`Username`),
   CONSTRAINT `FK_game_user` FOREIGN KEY (`Username`) REFERENCES `user` (`Username`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 COLLATE = utf8_general_ci;
 
 -- Data exporting was unselected.
 
@@ -183,21 +183,21 @@ CREATE TABLE IF NOT EXISTS `marsami` (
   PRIMARY KEY (`IDMarsami`),
   KEY `fk_Marsami_Game1_idx` (`GameID`),
   CONSTRAINT `fk_Marsami_Game1` FOREIGN KEY (`GameID`) REFERENCES `game` (`IDJogo`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 COLLATE = utf8_general_ci;
 
 -- Data exporting was unselected.
 
 -- Dumping structure for table marsami_game.message
 CREATE TABLE IF NOT EXISTS `message` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
-  `Hora` datetime DEFAULT current_timestamp(),
+  `Hora` datetime DEFAULT NULL,
   `Sala` int(11) DEFAULT NULL,
   `GameID` int(11) NOT NULL,
   `Sensor` int(11) DEFAULT NULL,
   `Leitura` decimal(6,2) DEFAULT NULL,
   `TipoAlerta` varchar(50) DEFAULT NULL,
   `Msg` varchar(100) DEFAULT NULL,
-  `HoraEscrita` datetime DEFAULT NULL,
+  `HoraEscrita` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`ID`),
   KEY `fk_Message_Game1_idx` (`GameID`),
   CONSTRAINT `fk_Message_Game1` FOREIGN KEY (`GameID`) REFERENCES `game` (`IDJogo`) ON DELETE NO ACTION ON UPDATE NO ACTION
@@ -210,14 +210,14 @@ CREATE TABLE IF NOT EXISTS `movement` (
   `IDMovement` int(11) NOT NULL AUTO_INCREMENT,
   `OriginRoom` int(11) NOT NULL,
   `DestinationRoom` int(11) NOT NULL,
-  `Status` enum('0','1','2') NOT NULL,
-  `Hour` datetime NOT NULL DEFAULT current_timestamp(),
+  `Status` enum ('0', '1', '2') NOT NULL,
+  `Hour` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `MarsamiNum` int(11) NOT NULL,
   `IDGame` int(11) NOT NULL,
   PRIMARY KEY (`IDMovement`),
   KEY `fk_Movement_Game1_idx` (`IDGame`),
   CONSTRAINT `fk_Movement_Game1` FOREIGN KEY (`IDGame`) REFERENCES `game` (`IDJogo`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 COLLATE = utf8_general_ci;
 
 -- Data exporting was unselected.
 
@@ -272,7 +272,7 @@ CREATE TABLE IF NOT EXISTS `sound` (
   PRIMARY KEY (`IDSound`),
   KEY `fk_Sound_Game1_idx` (`IDGame`),
   CONSTRAINT `fk_Sound_Game1` FOREIGN KEY (`IDGame`) REFERENCES `game` (`IDJogo`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 COLLATE = utf8_general_ci;
 
 -- Data exporting was unselected.
 
@@ -280,7 +280,7 @@ CREATE TABLE IF NOT EXISTS `sound` (
 CREATE TABLE IF NOT EXISTS `user` (
   `Username` varchar(50) NOT NULL,
   `Nome` varchar(100) DEFAULT NULL,
-  `Telemovel` decimal(12,0) DEFAULT NULL,
+  `Telemovel` varchar(12) DEFAULT NULL,
   `Tipo` varchar(3) NOT NULL,
   `Email` varchar(50) NOT NULL,
   `Grupo` int(11) DEFAULT NULL,
