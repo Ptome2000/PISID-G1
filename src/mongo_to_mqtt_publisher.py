@@ -46,7 +46,6 @@ def is_spam(collection_name, current_doc):
         return False
 
     elif collection_name == "ruido":
-        # TODO: alterar para comparar apenas o som, em vez do documento todo.
         if last_ruido == current_doc["Sound"]:
             ruido_repeats += 1
             if ruido_repeats > 1:
