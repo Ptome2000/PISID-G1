@@ -103,35 +103,39 @@ def deal_alerts(data, game, cursor):
     """
 
     try:
+        hour = data["Hour"]
         game_start_date = game['StartDate'] if 'StartDate' in game else datetime.now()
         current_sound = float(data["Sound"])
         normal_noise = float(data.get("BaseSound", 0))
         tolerance = float(data.get("SoundVarTolerance", 0))
-        max_limit = (normal_noise + tolerance)
+        max_limit = float(normal_noise + tolerance)
         threshold_90 = max_limit * 0.9
-        threshold_10 = max_limit * 0.
+        print(threshold_90)
+        threshold_10 = normal_noise * 1.1
 
-        # 1 Alert: If sound level exceeds 90% of the maximum limit
+        # 1 Alert: Alertar 1x se o nível de som exceder 90% do limite máximo
         if current_sound > threshold_90:
             print("[ALERT] Sound level exceeded 90% of the maximum limit!")
             alert = AlertType.SOUND_EXCEEDS_90_PERCENT
-            cursor.callproc("post_alert", (current_sound, None, 1, current_sound, alert.code, alert.message))
+            cursor.callproc("post_alert", (hour, None, 1, current_sound, alert.code, alert.message))
 
-        # Cenário 2: Alertar 1x se o nível de som baixar de 90%
+        # Cenário 2: Alertar 1x se o nível de som estiver abaixo de 10% do ruído normal
         elif current_sound <= threshold_90:
-            print("[ALERT] Sound level dropped below 90% of the maximum limit!")
+            print("[ALERT] Sound level under 90% of the maximum limit! You're marsamis are safe.")
             alert = AlertType.SOUND_BELOW_90_PERCENT
-            cursor.callproc("post_alert", (current_sound, None, 1, current_sound, alert.code, alert.message))
+            cursor.callproc("post_alert", (hour, None, 1, current_sound, alert.code, alert.message))
 
         # Cenário 3: Após 30s do início do jogo, alertar se o som estiver demasiado perto do ruído normal
-
-
+        elif (datetime.now() - game_start_date).total_seconds() > 30 and current_sound <= threshold_10:
+            print("[ALERT] Sound level is too close to normal noise after 30 seconds!")
+            alert = AlertType.SOUND_TOO_CLOSE_TO_NORMAL
+            cursor.callproc("post_alert", (hour, None, 1, current_sound, alert.code, alert.message))
 
         # Cenário 4: Alerta caso o limite máximo tenha sido ultrapassado
         elif current_sound > max_limit:
             print("[GAME OVER] Maximum sound limit exceeded! The maze doors are closed, and the game is lost.")
             alert = AlertType.SOUND_EXCEEDS_MAX_LIMIT
-            cursor.callproc("post_alert", (current_sound, None, 1, current_sound, alert.code, alert.message))
+            cursor.callproc("post_alert", (hour, None, 1, current_sound, alert.code, alert.message))
 
     except KeyError as e:
         print(f"[ERROR] Missing key in data: {e}")
@@ -189,7 +193,7 @@ def validate_data(data, tipo, game, previous_value=None):
             threshold = (normal_noise + tolerance) * 1.75
             current_sound = float(data["Sound"])
 
-            if current_sound > threshold or current_sound <= normal_noise:
+            if current_sound > threshold or current_sound < normal_noise:
                 return False, "Sound value is outside acceptable limits"
 
             # Verifica se a variação para o valor anterior é excessiva
@@ -288,9 +292,8 @@ def store_sound(connection, payload):
     Processa e armazena dados de som no MySQL após validação.
     """
     try:
-        data = json.loads(payload)
-
         cursor = connection.cursor(dictionary=True)
+        data = json.loads(payload)
         game = get_active_game(cursor)
         if not game:
             return
@@ -300,7 +303,7 @@ def store_sound(connection, payload):
             print(f"[INVALID SOUND] {msg}")
             return
 
-            deal_alerts(data, game, cursor)
+        deal_alerts(data, game, cursor)
 
         # Inserção na tabela sound
         cursor.execute("""
@@ -344,3 +347,5 @@ def startScript(username):
     USER_NAME = username
     client.connect(broker_host, broker_port, 60)
     client.loop_forever()
+
+startScript("ptome")
