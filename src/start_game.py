@@ -70,9 +70,6 @@ def createMysqlGame():
     conn = connect_mysql_pc2()
     cursor = conn.cursor(dictionary=True)
 
-    game_name = "Jogo Exemplo"
-    game_description = "Descrição do jogo"
-
     # Chamar stored procedure com parâmetros
     cursor.callproc("criar_jogo", [
         gameUser,
@@ -91,27 +88,40 @@ def createMysqlGame():
 
 # correr o jogo
 def score(client):
-    # TODO: pegar room da base de dados
     room = random.randint(1, 10)
     message = {"Type": "Score", "Player": current_player, "Room": room}
     print(str(message))
     client.publish("pisid_mazeact", str(message))
 
+def single_door_act(type, client):
+    origin = random.randint(1, 10)
+    destiny = origin
+    while destiny == origin:
+        destiny = random.randint(1, 10)
+    message = {"Type": type, "Player": current_player, "RoomOrigin": origin, "RoomDestiny": destiny}
+    print(str(message))
+    client.publish("pisid_mazeact", str(message))
+
+def all_door_act(type, client):
+    message = {"Type": type, "Player": current_player}
+    print(str(message))
+    client.publish("pisid_mazeact", str(message))
 
 def play_game(client):
-    action = random.randint(1, 5)
-    match action:
-        case GameActions.SCORE:
-            score(client)
-            print("SCORE")
-        case GameActions.OPEN_DOOR:
-            print("OPEN_DOOR")
-        case GameActions.CLOSE_DOOR:
-            print("CLOSE_DOOR")
-        case GameActions.OPEN_ALL_DOOR:
-            print("OPEN_ALL_DOOR")
-        case GameActions.CLOSE_ALL_DOOR:
-            print("CLOSE_ALL_DOOR")
+    while True:
+        action = random.randint(1, 5)
+        match action:
+            case GameActions.SCORE:
+                score(client)
+            case GameActions.OPEN_DOOR:
+                single_door_act("OpenDoor", client)
+            case GameActions.CLOSE_DOOR:
+                single_door_act("CloseDoor", client)
+            case GameActions.OPEN_ALL_DOOR:
+                all_door_act("OpenAllDoor", client)
+            case GameActions.CLOSE_ALL_DOOR:
+                all_door_act("CloseAllDoor", client)
+        time.sleep(2)
 
 
 # controlar estados do jogo
@@ -149,8 +159,8 @@ def on_connect(client, userdata, flags, reason_code, properties):
     client.subscribe("g1_control_pc1")
     client.subscribe("g1_control_pc2")
     client.subscribe("g1_control_status")
+    client.subscribe("pisid_mazeact")
     threading.Thread(target=controlState, args=(client,)).start()
-
 
 def on_message(client, userdata, msg):
     global PC1_READY, PC2_READY
@@ -179,9 +189,9 @@ def on_message(client, userdata, msg):
             )
     if (msg.topic == "g1_control_pc1" and msg.payload.decode() == "START"):
         print('GAME IS READY TO PLAY...')
-        while True:
-            play_game(client)
-            time.sleep(2)
+        threading.Thread(target=play_game, args=(client,)).start()
+    if(msg.topic == "pisid_mazeact"):
+        print("\033[92mPLAYING MAZEACT... ", str(msg.payload.decode()), "\033[00m")
 
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
