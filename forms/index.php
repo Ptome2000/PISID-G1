@@ -44,7 +44,6 @@
                             <th scope="col">Name</th>
                             <th scope="col">Description</th>
                             <th scope="col">Date</th>
-                            <th scope="col">Score</th>
                             <th scope="col">Status</th>
                             <th scope="col">Edit</th>
                         </tr>
@@ -57,7 +56,7 @@
                                 die("Connection failed: " . $conn->connect_error);
                             }
 
-                            $stmt = $conn->prepare("SELECT IDJogo, GameName, Description, StartDate, TotalMarsamis, GameOver FROM game WHERE Username = ?");
+                            $stmt = $conn->prepare("SELECT IDJogo, GameName, Description, StartDate, GameOver FROM game WHERE Username = ?");
                             $stmt->bind_param("s", $user);
                             $stmt->execute();
                             $result = $stmt->get_result();
@@ -65,6 +64,8 @@
                             $hasGames = false;
 
                             while ($row = $result->fetch_assoc()) {
+                                $gameIsOver = $row["GameOver"] == 0 ? "disabled" : "";
+                                echo $gameIsOver;
                                 $hasGames = true;
                                 $status = $row["GameOver"] ? "Ended" : "Running";
                                 echo "<tr>";
@@ -72,10 +73,9 @@
                                 echo "<td>" . htmlspecialchars($row['GameName']) . "</td>";
                                 echo "<td>" . htmlspecialchars($row['Description']) . "</td>";
                                 echo "<td>{$row['StartDate']}</td>";
-                                echo "<td>{$row['TotalMarsamis']}</td>";
                                 echo "<td>{$status}</td>";
                                 $gameId = $row['IDJogo'];
-                                echo "<td><a href=\"editGame.php?id=$gameId\" class=\"btn btn-outline-primary\">Edit Game</a></td>";
+                                echo "<td><a href=\"editGame.php?id=$gameId\" class=\"$gameIsOver btn btn-outline-primary\">Edit Game</a></td>";
                                 echo "</tr>";
                             }
 
