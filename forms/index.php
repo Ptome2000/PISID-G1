@@ -65,7 +65,6 @@
 
                             while ($row = $result->fetch_assoc()) {
                                 $gameIsOver = $row["GameOver"] == 0 ? "disabled" : "";
-                                echo $gameIsOver;
                                 $hasGames = true;
                                 $status = $row["GameOver"] ? "Ended" : "Running";
                                 echo "<tr>";
