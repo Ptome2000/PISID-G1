@@ -161,9 +161,9 @@ DELIMITER ;
 
 -- Dumping structure for procedure marsami_game.get_active_game
 DELIMITER //
-CREATE DEFINER=`root`@`localhost` PROCEDURE `get_active_game`(
+CREATE DEFINER=`app`@`localhost` PROCEDURE `get_active_game`(
 	IN `user_name` VARCHAR(50)
-)
+)   
 BEGIN
 	 SELECT *
     FROM Game
