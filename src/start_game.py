@@ -121,7 +121,7 @@ def play_game(client):
                 all_door_act("OpenAllDoor", client)
             case GameActions.CLOSE_ALL_DOOR:
                 all_door_act("CloseAllDoor", client)
-        time.sleep(2)
+        time.sleep(3)
 
 
 # controlar estados do jogo
