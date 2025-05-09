@@ -121,7 +121,8 @@ def play_game(client):
                 all_door_act("OpenAllDoor", client)
             case GameActions.CLOSE_ALL_DOOR:
                 all_door_act("CloseAllDoor", client)
-        time.sleep(3)
+        timer = random.randint(1, 5)
+        time.sleep(timer)
 
 
 # controlar estados do jogo
