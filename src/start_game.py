@@ -107,8 +107,8 @@ def all_door_act(type, client):
     print(str(message))
     client.publish("pisid_mazeact", str(message))
 
-def play_game(client):
-    while True:
+def play_game(client, evento_parar):
+    while not evento_parar.is_set():
         action = random.randint(1, 5)
         match action:
             case GameActions.SCORE:
@@ -163,8 +163,9 @@ def on_connect(client, userdata, flags, reason_code, properties):
     client.subscribe("pisid_mazeact")
     threading.Thread(target=controlState, args=(client,)).start()
 
+evento_parar = threading.Event()
 def on_message(client, userdata, msg):
-    global PC1_READY, PC2_READY
+    global PC1_READY, PC2_READY, evento_parar
     print(msg.topic + " " + str(msg.payload))
     if (msg.topic == "g1_control_pc1" and msg.payload.decode() == "ACK"):
         print('ACK received')
@@ -188,11 +189,16 @@ def on_message(client, userdata, msg):
                 shell=True,
                 creationflags=subprocess.CREATE_NEW_CONSOLE,
             )
+        if status == "GAME_OVER":
+            evento_parar.set()
+            time.sleep(2)
+            os._exit(0)
     if (msg.topic == "g1_control_pc1" and msg.payload.decode() == "START"):
         print('GAME IS READY TO PLAY...')
-        threading.Thread(target=play_game, args=(client,)).start()
+        threading.Thread(target=play_game, args=(client, evento_parar,)).start()
     if(msg.topic == "pisid_mazeact"):
         print("\033[92mPLAYING MAZEACT... ", str(msg.payload.decode()), "\033[00m")
+
 
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)

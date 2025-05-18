@@ -48,6 +48,7 @@ def on_connect(client, userdata, flags, reason_code, properties):
     client.subscribe(f"pisid_g1_movimento_{current_player}")
     client.subscribe(f"pisid_g1_ruido_{current_player}")
     client.subscribe("g1_control_pc2")
+    client.subscribe("g1_control_status")
 
 
 ACK_SENT = False
@@ -119,6 +120,7 @@ def deal_alerts(data, game, connection):
             print("\033[93m[GAME OVER] Maximum sound limit exceeded! The maze doors are closed, and the game is lost.\033[00m")
             alert = AlertType.SOUND_EXCEEDS_MAX_LIMIT
             cursor.callproc("post_alert", (hour, None, game['IDJogo'], 1, current_sound, alert.code, alert.message))
+            client.publish("g1_control_status", "GAME_OVER")
 
         # Cenário 2: Alertar 1x se o nível de som exceder 90% do limite máximo
         elif current_sound > threshold_90:
